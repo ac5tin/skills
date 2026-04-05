@@ -7,6 +7,7 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 - `skills/` — Each subdirectory is a skill containing a `SKILL.md` with YAML frontmatter (`name`, `description`) and instructions.
   - `code-quality/` — General clean-code best practices (KISS, DRY, simplicity).
   - `golang-code/` — Go coding standards: error handling, naming, anti-patterns, pointers, function signatures, linting.
+  - `go-service-scaffold/` — Scaffold a Go microservice (includes reference templates).
   - `trivy-scanner/` — Run Trivy vulnerability scans via Podman.
 
 ## Build / Test
