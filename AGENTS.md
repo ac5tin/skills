@@ -10,9 +10,16 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
   - `go-service-scaffold/` — Scaffold a Go microservice (includes reference templates).
   - `trivy-scanner/` — Run Trivy vulnerability scans via Podman.
 
+- Plugin packaging (no `skills/` changes needed; new skills are picked up automatically):
+  - `.claude-plugin/` — Claude Code, Claude Desktop, ZCode. `version` is deliberately omitted so the git commit SHA is the version.
+  - `.codex-plugin/`, `.agents/plugins/` — Codex. `version` is a constant `0.0.0` because Codex requires the field.
+  - `package.json` (`pi.skills`) — Pi.
+  - `.opencode/plugins/ac5tin-skills.js` + root `index.js` — OpenCode v2; registers every `skills/*/SKILL.md`.
+  - Do not add tags, version bumps, or release automation; a new commit is a new release.
+
 ## Build / Test
 
-No build system, dependencies, or tests. This is a documentation-only repo.
+No build system or dependencies. After changing packaging, run `claude plugin validate .` (a missing-version warning is expected).
 
 ## Conventions
 

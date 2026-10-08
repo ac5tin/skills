@@ -1,0 +1,13 @@
+{
+  "name": "ac5tin-skills",
+  "owner": { "name": "Austin Chang", "url": "https://github.com/ac5tin" },
+  "description": "ac5tin's agent skills as an installable plugin.",
+  "plugins": [
+    {
+      "name": "ac5tin-skills",
+      "source": "./",
+      "description": "Code quality, Go code style, Go service scaffolding, and Trivy vulnerability scanning skills.",
+      "category": "development"
+    }
+  ]
+}

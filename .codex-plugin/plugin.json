@@ -1,0 +1,18 @@
+{
+  "name": "ac5tin-skills",
+  "version": "0.0.0",
+  "description": "Reusable agent skills: code quality, Go code style, Go service scaffolding, and Trivy vulnerability scanning.",
+  "author": { "name": "Austin Chang", "url": "https://github.com/ac5tin" },
+  "homepage": "https://github.com/ac5tin/skills",
+  "repository": "https://github.com/ac5tin/skills",
+  "keywords": ["skills", "golang", "code-quality", "trivy"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ac5tin Skills",
+    "shortDescription": "Code quality, Go, and Trivy skills",
+    "developerName": "Austin Chang",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/ac5tin/skills"
+  }
+}
