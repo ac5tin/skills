@@ -9,6 +9,7 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 | `code-quality` | Enforce clean, simple, maintainable code best practices. Use when planning, implementation and code reviews. |
 | `go-service-scaffold` | Scaffolds new Go microservices from scratch with a production-ready layered architecture: Fiber HTTP, Bun ORM, Unit of Work, dual-interface services, domain packages, task queues, cron workers. Use when creating a new Go project, bootstrapping a Go service, or asked to scaffold a Go API. |
 | `golang-code` | Enforce good Go (Golang) code styles and best practices. Use when writing and reviewing Go code. |
+| `next-steps` | Always end a finished task with clear next actions and follow-ups. Use whenever completing a task, fix, plan, review, or any work that changes state. |
 | `trivy-scanner` | Scan the current project for vulnerabilities using Trivy via Podman. |
 
 ## Installation
