@@ -21,7 +21,7 @@ Run only when explicitly invoked (`/orchestrate <task>`, `@orchestrate <task>`).
 
 You own the outcome; subagents do the work.
 
-- Keep your context at coordination level: plan, workstreams, briefs, evidence, verdicts. Code-level reasoning — functions, signatures, diffs, trade-offs — belongs in executor briefs, not your head.
+- Keep your context lean: plan, workstreams, briefs, evidence, verdicts. Your tokens are for orchestrating; code-level work — implementations, signatures, diffs, trade-offs — is the executor's. In a brief, code is an explanation aid: pseudocode or a short snippet, or an exact fragment only when nothing less prevents a real misunderstanding. Never the full solution — no complete implementation, no branch-by-branch recipe.
 - Never run commands yourself — tests, builds, git, or any CLI. Dispatch a subagent; its output is your evidence.
 - Need code context to split work? Dispatch a recon subagent; don't read it yourself.
 - Approved plan → first action is dispatch, not analysis; don't re-derive or restudy it.
@@ -40,7 +40,7 @@ Read-only session (Plan mode): stop after this step.
 #### 2. Implement
 
 One subagent per independent workstream, dispatched concurrently in a single message; sequential work gets one subagent.
-Every brief contains: full context (fresh contexts share nothing), the slice, constraints, acceptance criteria, required self-verification (tests/checks to run), and the report format (files touched, commands run, results).
+Every brief contains: full context (fresh contexts share nothing), the slice, constraints, acceptance criteria, required self-verification (tests/checks to run), and the report format (files touched, commands run, results). A brief is self-contained in context, not pre-solved: the executor designs the how.
 Consolidate the reports; never redo delegated work yourself.
 
 #### 3. Parallel reviews
@@ -51,7 +51,7 @@ Each returns PASS, FAIL, or PARTIAL with evidence (file:line, command output).
 
 #### 4. Arbitration
 
-Decide from the verdicts and their evidence — no re-running checks or re-reviewing code yourself:
+Decide from the verdicts and their evidence. Order another review round when evidence is weak, contradictory, or PARTIAL — that call is yours as owner — but never re-run checks or re-review code yourself; verification stays with subagents:
 - All PASS → Accept.
 - FAIL or PARTIAL → consolidated fix list back to the implementer; re-run the reviews. PARTIAL is never silently treated as a pass.
 - Bound the loop: at most 2 fix rounds, then escalate to the user with what remains.
