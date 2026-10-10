@@ -7,7 +7,7 @@ description: Use only when the user explicitly invokes this skill via the harnes
 
 ## Overview
 
-The main agent is the orchestrator: it plans, fans out to subagents, arbitrates, and reports. It does not edit files itself.
+The main agent is the orchestrator: it plans, fans out to subagents, arbitrates, and reports. All reading, coding, and command execution happen inside subagents — never in the orchestrator's own context.
 
 ```
 Plan → Implement → Parallel reviews → Arbitration → Accept
@@ -16,6 +16,18 @@ Plan → Implement → Parallel reviews → Arbitration → Accept
 ```
 
 Run only when explicitly invoked (`/orchestrate <task>`, `@orchestrate <task>`). Never self-select it, offer it, or apply it to a task on your own. If the harness has no subagent dispatch, say so and stop.
+
+## Own it, delegate the doing
+
+You own the outcome; subagents do the work.
+
+- Keep your context at coordination level: plan, workstreams, briefs, evidence, verdicts. Code-level reasoning — functions, signatures, diffs, trade-offs — belongs in executor briefs, not your head.
+- Never run commands yourself — tests, builds, git, or any CLI. Dispatch a subagent; its output is your evidence.
+- Need code context to split work? Dispatch a recon subagent; don't read it yourself.
+- Approved plan → first action is dispatch, not analysis; don't re-derive or restudy it.
+- Accept only with evidence (command output, verdicts with file:line); weak or missing evidence → bounce it back or re-review. Never accept on assertion, never fix it yourself.
+
+Orchestration changes who works, not how: executors keep their normal skills (e.g., TDD) and project conventions; reviewers keep normal review standards.
 
 ## Steps
 
@@ -39,18 +51,18 @@ Each returns PASS, FAIL, or PARTIAL with evidence (file:line, command output).
 
 #### 4. Arbitration
 
-Decide from the verdicts:
+Decide from the verdicts and their evidence — no re-running checks or re-reviewing code yourself:
 - All PASS → Accept.
 - FAIL or PARTIAL → consolidated fix list back to the implementer; re-run the reviews. PARTIAL is never silently treated as a pass.
 - Bound the loop: at most 2 fix rounds, then escalate to the user with what remains.
 
 #### 5. Accept
 
-Report: what was built, what was verified (commands and results), each verdict, and what remains unverified or risky.
+Report: what was built, what was verified (commands and results from subagents), each verdict, and what remains unverified or risky.
 
 ## Subagent selection
 
-At every dispatch, enumerate the subagent types you actually have, then pick the best fit for the role: recon/explore types for investigation, coding types for implementation, review/general types for reviews. Fall back to the general-purpose subagent. Never invent agent names. Only one type available? Use it for every role — fresh, isolated briefs still provide independence.
+At every dispatch, enumerate the subagent types you actually have, then pick the best fit for the role: recon/explore for investigation, coding for implementation, review/general for reviews. Fall back to the general-purpose subagent; never invent agent names. Only one type? Use it for every role — fresh, isolated briefs still provide independence.
 
 ## Quick reference
 
@@ -62,8 +74,13 @@ At every dispatch, enumerate the subagent types you actually have, then pick the
 | Independent reviewer | separate subagent | independent lens |
 | Arbiter | main agent | PASS/FAIL/PARTIAL, accept or fix |
 
-## Not for
+## Scale, don't bail
 
-Single-file fixes or one workstream — tell the user the simpler path instead.
+Explicitly invoked? Run the workflow — always. Size changes the structure, not whether to orchestrate:
+
+- One workstream → 1 executor + the review pair.
+- Independent workstreams → one executor each, dispatched together.
+
+State the scale in one line, then dispatch. Never switch to implementing yourself, and never pause to debate whether orchestration is worth it.
 
 Adapted from Empryo's multi-agent workflows: https://empryo.com/docs/agents/workflows
