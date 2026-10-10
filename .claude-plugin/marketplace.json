@@ -6,7 +6,7 @@
     {
       "name": "ac5tin-skills",
       "source": "./",
-      "description": "Code quality, Go code style, Go service scaffolding, and Trivy vulnerability scanning skills.",
+      "description": "Reusable agent skills: code quality, Go, workflow, orchestration, and security scanning.",
       "category": "development"
     }
   ]

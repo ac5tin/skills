@@ -1,6 +1,6 @@
 {
   "name": "ac5tin-skills",
-  "description": "Reusable agent skills: code quality, Go code style, Go service scaffolding, and Trivy vulnerability scanning.",
+  "description": "Reusable agent skills: code quality, Go, workflow, orchestration, and security scanning.",
   "type": "module",
   "main": ".opencode/plugins/ac5tin-skills.js",
   "repository": "github:ac5tin/skills",

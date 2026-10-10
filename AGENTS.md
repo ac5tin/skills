@@ -8,6 +8,8 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
   - `code-quality/` — General clean-code best practices (KISS, DRY, simplicity).
   - `golang-code/` — Go coding standards: error handling, naming, anti-patterns, pointers, function signatures, linting.
   - `go-service-scaffold/` — Scaffold a Go microservice (includes reference templates).
+  - `next-steps/` — End finished tasks with clear next actions and follow-ups.
+  - `orchestrate/` — Multi-agent orchestration: subagent fan-out, isolated parallel reviews, arbitration. Triggered only via explicit invocation.
   - `trivy-scanner/` — Run Trivy vulnerability scans via Podman.
 
 - Plugin packaging (no `skills/` changes needed; new skills are picked up automatically):
