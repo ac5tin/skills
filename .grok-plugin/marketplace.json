@@ -1,0 +1,18 @@
+{
+  "name": "ac5tin-skills",
+  "description": "ac5tin's agent skills as an installable Grok Build plugin.",
+  "owner": { "name": "Austin Chang", "url": "https://github.com/ac5tin" },
+  "plugins": [
+    {
+      "name": "ac5tin-skills",
+      "description": "Reusable agent skills: code quality, Go, workflow, orchestration, and security scanning.",
+      "category": "development",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/ac5tin/skills.git"
+      },
+      "homepage": "https://github.com/ac5tin/skills",
+      "keywords": ["skills", "golang", "code-quality", "trivy"]
+    }
+  ]
+}
