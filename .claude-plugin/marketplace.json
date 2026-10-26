@@ -1,6 +1,9 @@
 {
   "name": "ac5tin-skills",
-  "owner": { "name": "Austin Chang", "url": "https://github.com/ac5tin" },
+  "owner": {
+    "name": "Austin Chang",
+    "url": "https://github.com/ac5tin"
+  },
   "description": "ac5tin's agent skills as an installable plugin.",
   "plugins": [
     {
@@ -8,7 +11,7 @@
       "source": {
         "source": "github",
         "repo": "ac5tin/skills",
-        "sha": "a279e2e89f0cbd8c92baf4f80ef308620d133494"
+        "sha": "6a9b8df22549977bb500d0c9df3074b6bcbf65d9"
       },
       "description": "Reusable agent skills: code quality, Go, workflow, orchestration, and security scanning.",
       "category": "development"
