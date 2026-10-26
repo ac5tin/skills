@@ -1,0 +1,43 @@
+name: pin-plugin-sha
+
+on:
+  push:
+    branches: [master]
+    paths: # pin only when plugin content changes; marketplace.json is excluded, so pin commits never re-trigger
+      - "skills/**"
+      - ".claude-plugin/plugin.json"
+      - ".github/workflows/pin-plugin-sha.yml" # lets the workflow's own changes re-pin
+  workflow_dispatch: # manual fallback
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pin-plugin-sha
+  cancel-in-progress: true # rapid pushes: only the latest run survives, and it pins the newest HEAD
+
+jobs:
+  pin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master # pin the branch head at run time, not the possibly stale event sha
+          fetch-depth: 0 # rebase-safe for the push retry
+
+      - name: Pin plugin sha
+        run: |
+          S="$(git rev-parse HEAD)"
+          F=".claude-plugin/marketplace.json"
+          CUR="$(jq -r '.plugins[0].source.sha // empty' "$F")"
+          if [ "$CUR" = "$S" ]; then echo "Already pinned to $S"; exit 0; fi
+          jq --arg s "$S" '.plugins[0].source = {"source":"github","repo":"ac5tin/skills","sha":$s}' "$F" > "$F.tmp" && mv "$F.tmp" "$F"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$F"
+          git commit -m "chore(marketplace): pin ac5tin-skills@${S:0:7}"
+          for i in 1 2 3; do
+            if git push; then exit 0; fi
+            git pull --rebase origin master
+          done
+          exit 1
