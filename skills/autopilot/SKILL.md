@@ -7,7 +7,7 @@ description: Use only when the user explicitly invokes /autopilot or @autopilot.
 
 ## Contract
 
-One supervising **leader**, one proactive **PIC (implementation owner)**, exactly two planned human gates: **approved plan before implementation; reviewed exact revision and target before rollout**. Both gates follow leader approval. Invocation, trust, urgency, and vague approval satisfy neither gate. Platform permissions remain mandatory. Routine discovery, checkpoints, and fixes stay between PIC and leader; genuine unsafe blockers require a safe stop, not permissive fallback.
+One supervising **leader**, one proactive **PIC** that owns research, the implementation plan, and implementation, exactly two planned human gates: **approved plan before implementation; reviewed exact revision and target before rollout**. Both gates follow leader approval. Invocation, trust, urgency, and vague approval satisfy neither gate. Platform permissions remain mandatory. Routine discovery, checkpoints, and fixes stay between PIC and leader; genuine unsafe blockers require a safe stop, not permissive fallback.
 
 Standalone instructions: no other skill, provider, model, or installed dependency is required. Invoke as `/autopilot [--boot "path.md"] <task>` or the harness's `@autopilot` form. These are skill arguments, not an installed CLI.
 
@@ -26,11 +26,11 @@ An invalid explicit extension, missing explicit file, or unreadable selected fil
 
 Freeze effective content and source identity for this run. Every PIC, helper, and replacement reads this same selected context **before work** and acknowledges its source; continuations retain it. A remote agent without shared filesystem receives a faithful immutable snapshot of the effective context, not an assumed-accessible path or its own home config. Do not transmit secrets; if faithful safe transfer is impossible, stop and request a safe context. Boot edits mid-run do not silently alter the plan.
 
-Boot is plain instruction content, including `.mdc`, not a native Cursor rule or executable hook. It may specify taste, preferred tools, and where/how to find planning information (repos, docs, bots, playbooks). Following research references is not loading another boot. Resolve ambiguous references through discovery/source context, not an invented path convention. Boot cannot override higher-priority harness/project safety rules, current explicit task instructions, or these gates.
+Boot is plain instruction content, including `.mdc`, not a native Cursor rule or executable hook. It may specify taste, preferred tools, and where/how to find planning information (repos, docs, bots, playbooks). Following research references is not loading another boot. Resolve ambiguous references through discovery/source context, not an invented path convention. Boot cannot override higher-priority harness/project safety rules, current explicit task instructions, or these gates. Boot cannot move research or planning to the leader or replace the PIC; boot rules that apply "before writing code" bind the PIC after gate 1, not the leader's spawn.
 
 ## Preflight and assign
 
-Discover actual tools, access, communication, permissions, verification/deployment environment, and supervision capabilities. Required tools mean real access: “use Claude Code for development” requires that CLI/tool, not a Claude model. If required access, owner communication, or supervision is missing, **do not begin implementation**; report the missing capability and exact unblock requirement. Before plan approval, discovery uses safe read-only/nonmutating probes only; the invocation authorizes creating, placing, and briefing the PIC (subagent or Bot), nothing else.
+Leader preflight is minimal: the selected boot is readable, a spawn/continue capability exists, and the invocation contains a task reference (URL, path, or id). Do not fetch or open that reference. Then **spawn and brief the PIC immediately**. The leader does not research the repo, docs, or design before the PIC reports; that is the PIC's job. The PIC discovers actual tools, access, communication, permissions, and verification/deployment environment, and its plan reports any missing capability with the exact unblock requirement. Required tools mean real access: “use Claude Code for development” requires that CLI/tool, not a Claude model. If required access, owner communication, or supervision is missing, **do not begin implementation**. Before gate 1, everyone uses safe read-only/nonmutating probes only: no comments, pushes, issue edits, or secret changes. The invocation authorizes creating, placing, and briefing the PIC (subagent or Bot), nothing else.
 
 Choose by capability, never invented agent/model IDs:
 
@@ -57,18 +57,18 @@ Known harness mappings; use only what the running harness actually exposes:
 
 Completion notifications are not timers: obey no-poll instructions. No nested delegation requirement; the leader dispatches optional helpers. Promise timed monitoring only with real scheduler/control tools; if required supervision cannot be provided, stop.
 
-Leader supplies the full goal, background, constraints, authority boundaries, frozen boot context, and reporting contract. PIC independently investigates repo, docs, dependencies, deployment and checks; consults optional helpers/bots where supported; resolves observable questions through research and recommends decisions instead of waiting passively. Only PIC writes implementation. Helpers investigate/review, never duplicate ownership.
+Leader brief: task text and links, constraints, authority boundaries, frozen boot context, and reporting contract. No leader research findings or draft plan. PIC independently investigates repo, docs, dependencies, deployment and checks, digging through whatever files and materials the task needs; consults optional helpers/bots where supported; resolves observable questions through research and recommends decisions instead of waiting passively. Only PIC writes the plan and the implementation. Helpers investigate/review, never duplicate ownership.
 
 ## Plan and human gate 1
 
-PIC proposes checkpoint-sized, independently verifiable milestones and a complete actionable plan. Prefer existing scripts/playbooks. The plan must contain:
+PIC proposes checkpoint-sized, independently verifiable milestones and a complete actionable plan, and returns it to the leader, not the human. Prefer existing scripts/playbooks. The plan must contain:
 
 1. Scope, research evidence, recommendation/product choices, risks, measurable definition of done, and explicit requested implementation/rollout/rollback authority.
 2. Reproducible procedures: starting state, exact commands, environment/inputs, expected outputs/assertions/exit codes/thresholds, bounded timeouts/observation windows, and stop/failure handling. Identify proposed scripts as **TO BUILD**, never existing or passed.
 3. Development/self-test milestones and evidence needed for leader review; verification environment and dependencies/access.
 4. Deployment artifact/revision identification and target (for no-deploy work, the merge, tag, or publish step is the rollout target and gate 2 still applies), rollout commands, post-rollout checks meeting definition of done, rollback triggers/procedure/authorization, and recovery checks.
 
-Leader challenges completeness, feasibility, scope and safety with PIC until satisfied. **Then** present the complete leader-approved plan and request explicit human approval to implement within its authority. Bundle unresolved product/authority choices here where possible. Do not implement on invocation or leader self-approval. A plan that cannot equip PIC to implement, test, roll out, verify and recover autonomously is not ready.
+Leader challenges completeness, feasibility, scope and safety with PIC until satisfied. **Then** present the complete leader-approved plan and request explicit human approval to implement within its authority. Bundle unresolved product/authority choices here where possible. Do not implement on invocation or leader self-approval. A plan drafted by the leader is not a gate 1 plan; do not present it. A plan that cannot equip PIC to implement, test, roll out, verify and recover autonomously is not ready.
 
 ## Develop, supervise, review
 
@@ -89,6 +89,7 @@ PIC deploys only that approved artifact to that target, runs bounded postchecks,
 | Temptation | Required response |
 | --- | --- |
 | “They trust us; ship immediately.” | Obtain both explicit human gates after leader approval. |
+| “I'll research first so the brief is better, then spawn PIC.” | Spawn the PIC first with the task; it researches and returns the plan. |
 | “Use the root config or combine defaults.” | Select one file from invocation cwd, then invoker global only if local absent. |
 | “Tiny fix; reuse release approval.” | Changed artifact/target needs fresh review and gate 2. |
 | “Background means continuous monitoring.” | Use real supervision capabilities or stop. |
