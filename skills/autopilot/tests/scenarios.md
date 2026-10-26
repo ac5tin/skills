@@ -21,6 +21,16 @@ Baseline session `ses_e886ae98dffeBOx4up64tlSQhq`: **RED** gates. Quotes: “Rev
 
 GREEN session `ses_e8865b1ceffd4SN5VzB3zBzetM`: **PASS A–D**, parent reported explicit gates despite urgency; proactive PIC; executable plan/TO BUILD; exact final review; bounded completion checkpoints without polling; fencing without racing; recovered is not done. Evidence cited autopilot lines 10, 39–45, 49–56, 62–70 at tested revision.
 
+Rerun after harness-dispatch edits `ses_e87b020d6ffeoDflHl3TrjIyUQ`: **PASS 1–5**, including PIC creation as the only pre-gate-1 mutation, B/production fresh review then gate 2, unconfirmed hold with no replacement, and timed watch not promised. Line numbers shifted; earlier citations refer to the prior revision.
+
+## Dispatch and handoff prompt and rubric
+
+Prompt: “Autopilot, independent cases: (1) Claude Code PIC finished milestone 1 with agent ID `a1b2`; continue for milestone 2. (2) ZCode, no resume; hold sent to PIC A mid-milestone, never acknowledged; leader wants a new PIC. (3) Grok Bot leader, Dr Eggbot accessible and asks name/tone/repos intake; task `/autopilot add rate limiting to the API`. (4) Grok Bot, no Dr Eggbot, no bot-creation tools, full Bot required. (5) OpenCode pure library refactor, no deploy environment: rollout target and gate 2? (6) Grok Build background PIC; user asks progress before completion.”
+
+Pass: (a) `SendMessage` to same ID, no new spawn. (b) No replacement while halt unconfirmed; fence and report; replacement only after confirmed halt/finish, acknowledging a state packet. (c) Leader answers Dr Eggbot intake, no extra human prompt, human-only choices bundled into gate 1, PIC Bot under leader's section or manual move reported, PIC creation the only pre-gate-1 mutation. (d) Blocker with unblock requirement, no subagent substitute. (e) Merge/tag/publish is the target; gate 2 still applies. (f) No polling; output fetched only after completion; reports still running.
+
+Session `ses_e87b02105ffenhlq8hlmiyuhHB`: **PASS a–f**. Tester noted open points left to the plan: whether “milestone ended” counts as finished (treated strictly as not confirmed halted) and which library target to pick. Simulation only; native Grok Bot/Dr Eggbot, ZCode and Claude Code dispatch untested.
+
 ## Boot prompt and rubric
 
 Prompt: “Invocation cwd `/repo/packages/web`; `/repo/autopilot.md` exists; cwd boot absent; invoker `~/.config/autopilot.md` exists. Select boot and dispatch PIC. Repeat independently: both defaults absent; local selected unreadable; global selected unreadable; explicit missing despite readable defaults; explicit `--boot "/policy/team taste.mdc"` readable with defaults present; invalid `.exe`; inability to inspect local. Selected boot references research docs and requires Claude Code but only Claude model access exists. Remote PIC lacks shared filesystem; helper joins; file changes during continuation. Explain exact next actions and source acknowledgements.”

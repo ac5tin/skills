@@ -30,17 +30,32 @@ Boot is plain instruction content, including `.mdc`, not a native Cursor rule or
 
 ## Preflight and assign
 
-Discover actual tools, access, communication, permissions, verification/deployment environment, and supervision capabilities. Required tools mean real access: “use Claude Code for development” requires that CLI/tool, not a Claude model. If required access, owner communication, or supervision is missing, **do not begin implementation**; report the missing capability and exact unblock requirement. Before plan approval, discovery uses safe read-only/nonmutating probes only.
+Discover actual tools, access, communication, permissions, verification/deployment environment, and supervision capabilities. Required tools mean real access: “use Claude Code for development” requires that CLI/tool, not a Claude model. If required access, owner communication, or supervision is missing, **do not begin implementation**; report the missing capability and exact unblock requirement. Before plan approval, discovery uses safe read-only/nonmutating probes only; the invocation authorizes creating the PIC itself (subagent or Bot), nothing else.
 
 Choose by capability, never invented agent/model IDs:
 
 | PIC mode | Supervision |
 | --- | --- |
-| Background subagent | Bounded checkpoint-sized milestone, completion notification, leader review, resume same session |
+| Background subagent | Bounded checkpoint-sized milestone, completion notification, leader review, continue same PIC (or handoff rule) |
 | Foreground subagent | Bounded milestone returns to leader for review and continuation |
 | Full bot | Independent runtime with actual bidirectional messaging/control |
 
-For OpenCode V2, use discovered `subagent(background:true)` support and returned `sessionID` continuation only when actually available. Completion notifications are not timers: obey no-poll instructions. Built-in general agents cannot spawn subagents; optional helpers can be dispatched by the leader. No nested delegation requirement. Promise timed monitoring only with real scheduler/control tools; if required supervision cannot be provided, stop.
+Known harness mappings; use only what the running harness actually exposes:
+
+| Harness | Spawn PIC | Continue same PIC |
+| --- | --- | --- |
+| Claude Code | `Agent` tool, `general-purpose` or custom type (never one-shot Explore/Plan) | `SendMessage` to the returned agent ID or name |
+| OpenCode V2 | `subagent` with `agent: "general"`, `background: true` if supported | Pass the returned `sessionID` |
+| Grok Build | `spawn_subagent`, `general-purpose` type; read background results with `get_command_or_subagent_output` only after completion | `resume_from` the completed subagent ID (same type) |
+| ZCode | `Agent` tool, general-purpose subagent | Handoff rule below unless resume is discovered |
+| Grok Bot | New full Bot owned by the leader, below | Direct message the PIC Bot |
+| Other | Any discovered spawn tool | Discovered continuation, else handoff rule |
+
+**Grok Bot:** the leader Bot creates one new PIC Bot under its management for this task. If the invoker's Dr Eggbot is accessible, ask Dr Eggbot to design and create it (one job: own this task, poteto-mode bar, explicit anti-jobs, leader's approval boundaries); otherwise create it directly with available bot-creation tools. The leader answers Dr Eggbot's intake from the task, frozen boot context, and authority boundaries; anything only the human can decide is bundled into gate 1, never a separate prompt. Place it in the leader's section where the runtime allows; otherwise report the one manual move needed. Brief and supervise it by direct message or group chat; it reports to the leader, not the human. No bot-creation access and no Dr Eggbot means a blocker, not a subagent substitute when a full Bot was required. On completion, hide the PIC Bot rather than delete it, preserving its audit trail.
+
+**Handoff rule:** when the same PIC cannot be continued, start one replacement only after the previous PIC has finished or confirmed it halted, never alongside a live writer. Give it a state packet: approved plan, frozen boot context, current artifact/revision, completed milestones with evidence, open deviations, and next milestone. It acknowledges the packet before work.
+
+Completion notifications are not timers: obey no-poll instructions. Some harnesses forbid nested subagents; optional helpers can be dispatched by the leader. No nested delegation requirement. Promise timed monitoring only with real scheduler/control tools; if required supervision cannot be provided, stop.
 
 Leader supplies the full goal, background, constraints, authority boundaries, frozen boot context, and reporting contract. PIC independently investigates repo, docs, dependencies, deployment and checks; consults optional helpers/bots where supported; resolves observable questions through research and recommends decisions instead of waiting passively. Only PIC writes implementation. Helpers investigate/review, never duplicate ownership.
 
@@ -51,7 +66,7 @@ PIC proposes checkpoint-sized, independently verifiable milestones and a complet
 1. Scope, research evidence, recommendation/product choices, risks, measurable definition of done, and explicit requested implementation/rollout/rollback authority.
 2. Reproducible procedures: starting state, exact commands, environment/inputs, expected outputs/assertions/exit codes/thresholds, bounded timeouts/observation windows, and stop/failure handling. Identify proposed scripts as **TO BUILD**, never existing or passed.
 3. Development/self-test milestones and evidence needed for leader review; verification environment and dependencies/access.
-4. Deployment artifact/revision identification and target, rollout commands, post-rollout checks meeting definition of done, rollback triggers/procedure/authorization, and recovery checks.
+4. Deployment artifact/revision identification and target (for no-deploy work, the merge, tag, or publish step is the rollout target and gate 2 still applies), rollout commands, post-rollout checks meeting definition of done, rollback triggers/procedure/authorization, and recovery checks.
 
 Leader challenges completeness, feasibility, scope and safety with PIC until satisfied. **Then** present the complete leader-approved plan and request explicit human approval to implement within its authority. Bundle unresolved product/authority choices here where possible. Do not implement on invocation or leader self-approval. A plan that cannot equip PIC to implement, test, roll out, verify and recover autonomously is not ready.
 
