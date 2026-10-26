@@ -30,7 +30,7 @@ Boot is plain instruction content, including `.mdc`, not a native Cursor rule or
 
 ## Preflight and assign
 
-Discover actual tools, access, communication, permissions, verification/deployment environment, and supervision capabilities. Required tools mean real access: “use Claude Code for development” requires that CLI/tool, not a Claude model. If required access, owner communication, or supervision is missing, **do not begin implementation**; report the missing capability and exact unblock requirement. Before plan approval, discovery uses safe read-only/nonmutating probes only; the invocation authorizes creating the PIC itself (subagent or Bot), nothing else.
+Discover actual tools, access, communication, permissions, verification/deployment environment, and supervision capabilities. Required tools mean real access: “use Claude Code for development” requires that CLI/tool, not a Claude model. If required access, owner communication, or supervision is missing, **do not begin implementation**; report the missing capability and exact unblock requirement. Before plan approval, discovery uses safe read-only/nonmutating probes only; the invocation authorizes creating, placing, and briefing the PIC (subagent or Bot), nothing else.
 
 Choose by capability, never invented agent/model IDs:
 
@@ -46,16 +46,16 @@ Known harness mappings; use only what the running harness actually exposes:
 | --- | --- | --- |
 | Claude Code | `Agent` tool, `general-purpose` or custom type (never one-shot Explore/Plan) | `SendMessage` to the returned agent ID or name |
 | OpenCode V2 | `subagent` with `agent: "general"`, `background: true` if supported | Pass the returned `sessionID` |
-| Grok Build | `spawn_subagent`, `general-purpose` type; read background results with `get_command_or_subagent_output` only after completion | `resume_from` the completed subagent ID (same type) |
+| Grok Build | `spawn_subagent`, `general-purpose`; `get_command_or_subagent_output` only after completion | `resume_from` the completed subagent ID |
 | ZCode | `Agent` tool, general-purpose subagent | Handoff rule below unless resume is discovered |
-| Grok Bot | New full Bot owned by the leader, below | Direct message the PIC Bot |
+| Grok Bot | New leader-managed Bot, below | Direct message the same Bot |
 | Other | Any discovered spawn tool | Discovered continuation, else handoff rule |
 
-**Grok Bot:** the leader Bot creates one new PIC Bot under its management for this task. If the invoker's Dr Eggbot is accessible, ask Dr Eggbot to design and create it (one job: own this task, poteto-mode bar, explicit anti-jobs, leader's approval boundaries); otherwise create it directly with available bot-creation tools. The leader answers Dr Eggbot's intake from the task, frozen boot context, and authority boundaries; anything only the human can decide is bundled into gate 1, never a separate prompt. Place it in the leader's section where the runtime allows; otherwise report the one manual move needed. Brief and supervise it by direct message or group chat; it reports to the leader, not the human. No bot-creation access and no Dr Eggbot means a blocker, not a subagent substitute when a full Bot was required. On completion, hide the PIC Bot rather than delete it, preserving its audit trail.
+**Grok Bot:** the PIC is always a new Bot the leader Bot creates and manages, never a subagent. Have the invoker's Dr Eggbot design and create it when accessible (one job: own this task; explicit anti-jobs; leader's approval boundaries), else available bot-creation tools; having neither is a blocker. The leader answers Dr Eggbot's intake itself and lists those choices in the gate 1 plan for the human to change; no separate prompt. Place the Bot in the leader's section, or report the one manual move needed. It reports to the leader by direct message or group chat, not to the human. Hide a replaced or finished PIC Bot rather than delete it, preserving its audit trail.
 
-**Handoff rule:** when the same PIC cannot be continued, start one replacement only after the previous PIC has finished or confirmed it halted, never alongside a live writer. Give it a state packet: approved plan, frozen boot context, current artifact/revision, completed milestones with evidence, open deviations, and next milestone. It acknowledges the packet before work.
+**Handoff rule:** the PIC role outlives its agent. Keep continuing the same PIC (same Bot on Grok Bot); replace it only when it cannot continue. A replacement, created the same way, starts only once the previous PIC has returned with nothing in flight, confirmed it halted, or been fenced: its pushes blocked (branch protection or revoked push access, verified) or write/deploy access revoked. A force-with-lease on the replacement's own pushes guards history but is not a fence. A possibly in-flight deploy or other non-git mutation needs a clean return, confirmed halt, or revoked access. Until then, report uncertainty; never run two writers. Give the replacement a state packet: approved plan, frozen boot context, current artifact/revision, completed milestones with evidence, open deviations, and next milestone. It acknowledges the packet before work.
 
-Completion notifications are not timers: obey no-poll instructions. Some harnesses forbid nested subagents; optional helpers can be dispatched by the leader. No nested delegation requirement. Promise timed monitoring only with real scheduler/control tools; if required supervision cannot be provided, stop.
+Completion notifications are not timers: obey no-poll instructions. No nested delegation requirement; the leader dispatches optional helpers. Promise timed monitoring only with real scheduler/control tools; if required supervision cannot be provided, stop.
 
 Leader supplies the full goal, background, constraints, authority boundaries, frozen boot context, and reporting contract. PIC independently investigates repo, docs, dependencies, deployment and checks; consults optional helpers/bots where supported; resolves observable questions through research and recommends decisions instead of waiting passively. Only PIC writes implementation. Helpers investigate/review, never duplicate ownership.
 
@@ -74,7 +74,7 @@ Leader challenges completeness, feasibility, scope and safety with PIC until sat
 
 After gate 1, PIC implements and self-verifies in a fix/check loop. At each bounded checkpoint report: **milestone; artifact/revision; commands/results; deviations; blockers; recommended next action**. Leader checks scope, evidence, deviations and risks, then resumes the same PIC for the next milestone or fixes. Continue internally; no routine human permission prompts or micromanagement.
 
-For a hold or authority loss, request that PIC halt mutations and report in-flight operations, safe state and acknowledgement. Do not claim a process stopped until confirmed. Without confirmation, report uncertainty and fence further mutations through available controls; never start a racing replacement writer. Unsafe/unresolvable blockers stop the workflow with exact recovery/unblock requirements. Material changes outside approved scope/authority require renewed plan approval through leader then human, not a hidden exception to gate 1.
+For a hold or authority loss, request that PIC halt mutations and report in-flight operations, safe state and acknowledgement. Do not claim a process stopped until confirmed; without confirmation, fence through available controls and follow the handoff rule. Unsafe/unresolvable blockers stop the workflow with exact recovery/unblock requirements. Material changes outside approved scope/authority require renewed plan approval through leader then human, not a hidden exception to gate 1.
 
 Leader performs actual final code **and evidence** review of the exact candidate and planned target; missing evidence is not a pass. Send fixes to PIC, never take over writing. Re-review fixes before presenting release approval.
 
