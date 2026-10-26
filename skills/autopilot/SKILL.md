@@ -57,18 +57,18 @@ Known harness mappings; use only what the running harness actually exposes:
 
 Completion notifications are not timers: obey no-poll instructions. No nested delegation requirement; the leader dispatches optional helpers. Promise timed monitoring only with real scheduler/control tools; if required supervision cannot be provided, stop.
 
-Leader brief: task text and links, constraints, authority boundaries, frozen boot context, and reporting contract. No leader research findings or draft plan. PIC independently investigates repo, docs, dependencies, deployment and checks, digging through whatever files and materials the task needs; consults optional helpers/bots where supported; resolves observable questions through research and recommends decisions instead of waiting passively. Only PIC writes the plan and the implementation. Helpers investigate/review, never duplicate ownership.
+Leader brief: task text and links, constraints, authority boundaries, frozen boot context, and reporting contract. No leader research findings or draft plan. PIC independently investigates repo, docs, dependencies, deployment and checks, digging through whatever files and materials the task needs; consults optional helpers/bots where supported; resolves observable questions through research and recommends decisions instead of waiting passively. Leader rules on PIC's recommendations; neither asks the human mid-plan. Only PIC writes the plan and the implementation. Helpers investigate/review, never duplicate ownership.
 
 ## Plan and human gate 1
 
 PIC proposes checkpoint-sized, independently verifiable milestones and a complete actionable plan, and returns it to the leader, not the human. Prefer existing scripts/playbooks. The plan must contain:
 
-1. Scope, research evidence, recommendation/product choices, risks, measurable definition of done, and explicit requested implementation/rollout/rollback authority.
+1. Scope, research evidence, decisions made (with rationale and rejected alternatives), risks, measurable definition of done, and explicit requested implementation/rollout/rollback authority.
 2. Reproducible procedures: starting state, exact commands, environment/inputs, expected outputs/assertions/exit codes/thresholds, bounded timeouts/observation windows, and stop/failure handling. Identify proposed scripts as **TO BUILD**, never existing or passed.
 3. Development/self-test milestones and evidence needed for leader review; verification environment and dependencies/access.
 4. Deployment artifact/revision identification and target (for no-deploy work, the merge, tag, or publish step is the rollout target and gate 2 still applies), rollout commands, post-rollout checks meeting definition of done, rollback triggers/procedure/authorization, and recovery checks.
 
-Leader challenges completeness, feasibility, scope and safety with PIC until satisfied. **Then** present the complete leader-approved plan and request explicit human approval to implement within its authority. Bundle unresolved product/authority choices here where possible. Do not implement on invocation or leader self-approval. A plan drafted by the leader is not a gate 1 plan; do not present it. A plan that cannot equip PIC to implement, test, roll out, verify and recover autonomously is not ready.
+Leader challenges completeness, feasibility, scope and safety with PIC until satisfied. Leader decides every product, design and scope choice with PIC before gate 1: adopt an option, record why, list rejected alternatives. A plan with an open question or an unchosen option is not leader-approved; send it back to PIC. If a choice needs authority the leader lacks (spend, credentials, production data, irreversible actions), the plan states the leader's chosen option plus the authority it needs. **Then**, only after explicit leader approval, present the complete leader-approved plan and request explicit human approval to implement within its authority. Gate 1 message: first line "Leader-approved plan: approve, or name a change"; then decisions made (each overridable), blockers needing human action, and plan location. No options to pick from. Do not implement on invocation or leader self-approval. A plan drafted by the leader is not a gate 1 plan; do not present it. A plan that cannot equip PIC to implement, test, roll out, verify and recover autonomously is not ready.
 
 ## Develop, supervise, review
 
@@ -90,6 +90,7 @@ PIC deploys only that approved artifact to that target, runs bounded postchecks,
 | --- | --- |
 | “They trust us; ship immediately.” | Obtain both explicit human gates after leader approval. |
 | “I'll research first so the brief is better, then spawn PIC.” | Spawn the PIC first with the task; it researches and returns the plan. |
+| “Let the human choose between options A and B.” | Leader chooses with PIC; gate 1 shows decisions, not questions. |
 | “Use the root config or combine defaults.” | Select one file from invocation cwd, then invoker global only if local absent. |
 | “Tiny fix; reuse release approval.” | Changed artifact/target needs fresh review and gate 2. |
 | “Background means continuous monitoring.” | Use real supervision capabilities or stop. |
