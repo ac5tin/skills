@@ -7,8 +7,10 @@ The only authoritative check list. `/autobot-setup validate` and `/autobot-docto
 Resolve one file. No merging, no ancestor search.
 
 1. `--template <path>` when given: `.md` or `.mdc`, resolved from the invocation directory.
-2. `~/.config/autobot.md`.
-3. `./autobot.md` in the invocation directory.
+2. `./autobot.md` in the invocation directory.
+3. `~/.config/autobot.md`.
+
+The nearest file wins. An explicit path beats both. `--template` is the only escape hatch when both exist and the global file is the wanted one.
 
 A missing, unreadable or wrong-extension explicit path is a blocker. No fallback. An empty file that exists is still selected.
 
@@ -80,7 +82,7 @@ A placeholder is not a value. Placeholders: empty, `TBD`, `TODO`, `...`, `<...>`
 Report the source and the step that selected it, then one line per finding in check order, then the verdict:
 
 ```
-Source: ./autobot.md (step 3, invocation directory)
+Source: ./autobot.md (step 2, invocation directory)
 T2 BLOCKER Driver bot / one job: empty value
 T5 BLOCKER Driver bot / skills required: implementation-plan missing
 T11 WARNING Driver bot / skill required: expected "skills required"

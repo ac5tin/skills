@@ -27,11 +27,11 @@ Create, send, receive and halt are required. Missing one stops the run and names
 Selection is fixed at invocation:
 
 1. `--template <path>`.
-2. `~/.config/autobot.md`.
-3. `./autobot.md` in the invocation directory.
+2. `./autobot.md` in the invocation directory.
+3. `~/.config/autobot.md`.
 4. None: stop and tell the human to run `/autobot-setup`.
 
-OpenBot runs from the agent workspace, so pass `--template` or use the global file.
+The nearest file wins. OpenBot runs from the agent workspace, so pass `--template` or put the template in `~/.config/autobot.md`.
 
 ## Verify
 

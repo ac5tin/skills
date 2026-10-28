@@ -154,6 +154,15 @@ for (const needle of ['--template', '~/.config/autobot.md', './autobot.md',
   assert(checks.includes(needle), `template-checks missing ${needle}`);
 }
 
+// Every copy of the resolver must agree, and local must win over global.
+const resolver = p => [...fs.readFileSync(p, 'utf8')
+  .matchAll(/`(~\/\.config\/autobot\.md|\.\/autobot\.md)`/g)]
+  .map(m => m[1]).slice(0, 2).join(' > ');
+const orders = ['skills/autobot/SKILL.md',
+  'skills/autobot-setup/reference/template-checks.md', 'docs/autobot-harnesses.md'].map(resolver);
+assert.equal(new Set(orders).size, 1, `resolver order differs: ${orders.join(' | ')}`);
+assert.equal(orders[0], './autobot.md > ~/.config/autobot.md', 'local must win over global');
+
 const doctor = added.find(s => s.id === 'autobot-doctor').content;
 for (const needle of ['template-checks.md', 'READY', 'BLOCKED', 'probe',
   'Never fix, edit, create, install']) {

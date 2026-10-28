@@ -16,8 +16,8 @@ Invoke as `/autobot [--template <path>] <task>`. These are skill arguments, not 
 Load exactly one file:
 
 1. `--template <path>` when given: `.md` or `.mdc`, resolved from the invocation directory. Missing, unreadable, or wrong extension blocks; no fallback.
-2. `~/.config/autobot.md` when present.
-3. `./autobot.md` in the invocation directory when present.
+2. `./autobot.md` in the invocation directory when present.
+3. `~/.config/autobot.md` when present.
 4. None: stop and tell the human to run `/autobot-setup`.
 
 Freeze the source and content for the run. Every bot in the run receives a faithful snapshot before work. A remote driver without the shared filesystem receives the snapshot, never a path it cannot read. Edits during the run do not change the plan.
