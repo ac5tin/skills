@@ -63,7 +63,7 @@ Prompt: "Autobot-setup, independent cases. (1) Local and global files both exist
 
 Pass:
 
-1. Local wins, global is not shown.
+1. Local wins, and the global file is listed as shadowed by path and step only.
 2. Global is selected.
 3. The explicit file wins and is the only source.
 4. Block; no fallback.
@@ -150,7 +150,7 @@ assert(!/T\d+\s+(BLOCKER|WARNING)/.test(setup), 'autobot-setup restates the chec
 
 const checks = fs.readFileSync('skills/autobot-setup/reference/template-checks.md', 'utf8');
 for (const needle of ['--template', '~/.config/autobot.md', './autobot.md',
-  'merge policy', 'implementation-plan', 'Template: PASS', 'T12']) {
+  'merge policy', 'implementation-plan', 'Template: PASS', 'T12', 'Shadowed']) {
   assert(checks.includes(needle), `template-checks missing ${needle}`);
 }
 

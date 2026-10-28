@@ -10,7 +10,7 @@ Resolve one file. No merging, no ancestor search.
 2. `./autobot.md` in the invocation directory.
 3. `~/.config/autobot.md`.
 
-The nearest file wins. An explicit path beats both. `--template` is the only escape hatch when both exist and the global file is the wanted one.
+The nearest file wins. An explicit path beats both. `--template` is the only escape hatch when both exist and the global file is the wanted one. Report every lower-precedence file that exists as shadowed: path and step number only, never its content.
 
 A missing, unreadable or wrong-extension explicit path is a blocker. No fallback. An empty file that exists is still selected.
 
@@ -83,6 +83,7 @@ Report the source and the step that selected it, then one line per finding in ch
 
 ```
 Source: ./autobot.md (step 2, invocation directory)
+Shadowed: ~/.config/autobot.md (step 3)
 T2 BLOCKER Driver bot / one job: empty value
 T5 BLOCKER Driver bot / skills required: implementation-plan missing
 T11 WARNING Driver bot / skill required: expected "skills required"

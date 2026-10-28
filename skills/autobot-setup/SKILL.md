@@ -17,7 +17,7 @@ For a write or removal, require explicit or unambiguous scope. Ask one targeted 
 
 ## Show effective
 
-Report the selected source, its content, and the selection step that chose it. Do not show shadowed files. An empty file that exists is still selected.
+Report the selected source, its content, and the step that chose it. Name each lower-precedence file that exists as shadowed, with its step and path only. An empty file that exists is still selected.
 
 ## Show harness
 
