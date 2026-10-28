@@ -7,7 +7,8 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 | Skill | Description |
 |-------|-------------|
 | `autobot` | Run one task through one driver bot the leader owns. Two human approvals: the plan, then the exact release. Use only via `/autobot` or `@autobot`. |
-| `setup-autobot` | Create, inspect or validate the autobot template. Use only via `/setup-autobot` or `@setup-autobot`. |
+| `autobot-setup` | Create, inspect or validate the autobot template. Use only via `/autobot-setup` or `@autobot-setup`. |
+| `autobot-doctor` | Check an autobot setup read-only and name what blocks a run. Use only via `/autobot-doctor` or `@autobot-doctor`. |
 | `implementation-plan` | Required structure and definition-of-done mapping for implementation plans. Use when writing, revising or checking a plan. |
 | `code-quality` | Enforce clean, simple, maintainable code best practices. Use when planning, implementation and code reviews. |
 | `go-service-scaffold` | Scaffolds new Go microservices from scratch with a production-ready layered architecture: Fiber HTTP, Bun ORM, Unit of Work, dual-interface services, domain packages, task queues, cron workers. Use when creating a new Go project, bootstrapping a Go service, or asked to scaffold a Go API. |

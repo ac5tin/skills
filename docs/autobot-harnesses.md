@@ -29,11 +29,13 @@ Selection is fixed at invocation:
 1. `--template <path>`.
 2. `~/.config/autobot.md`.
 3. `./autobot.md` in the invocation directory.
-4. None: stop and tell the human to run `/setup-autobot`.
+4. None: stop and tell the human to run `/autobot-setup`.
 
 OpenBot runs from the agent workspace, so pass `--template` or use the global file.
 
 ## Verify
 
-- `/setup-autobot show harness` — the capabilities present and the one action left.
-- `/setup-autobot show effective` — the template in force.
+- `/autobot-doctor` — every check, then `READY` or `BLOCKED` and the one action that clears it.
+- `/autobot-doctor harness` — the capabilities present and the one action left.
+- `/autobot-setup show effective` — the template in force.
+- `/autobot-setup validate` — the template against `reference/template-checks.md`.

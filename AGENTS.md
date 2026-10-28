@@ -6,7 +6,8 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 
 - `skills/` — Each subdirectory is a skill containing a `SKILL.md` with YAML frontmatter (`name`, `description`) and instructions.
   - `autobot/` — One task through one driver bot the leader owns: plan, build, release, retire. Two human approvals. Triggered only via explicit invocation.
-  - `setup-autobot/` — Create, inspect or validate the autobot template. Triggered only via explicit invocation.
+  - `autobot-setup/` — Create, inspect or validate the autobot template. Owns `reference/template-checks.md`, the single check list. Triggered only via explicit invocation.
+  - `autobot-doctor/` — Read-only health check of a template, harness and fleet prerequisites. Triggered only via explicit invocation.
   - `implementation-plan/` — Required plan structure and the definition-of-done mapping.
   - `code-quality/` — General clean-code best practices (KISS, DRY, simplicity).
   - `golang-code/` — Go coding standards: error handling, naming, anti-patterns, pointers, function signatures, linting.

@@ -18,11 +18,13 @@ Load exactly one file:
 1. `--template <path>` when given: `.md` or `.mdc`, resolved from the invocation directory. Missing, unreadable, or wrong extension blocks; no fallback.
 2. `~/.config/autobot.md` when present.
 3. `./autobot.md` in the invocation directory when present.
-4. None: stop and tell the human to run `/setup-autobot`.
+4. None: stop and tell the human to run `/autobot-setup`.
 
 Freeze the source and content for the run. Every bot in the run receives a faithful snapshot before work. A remote driver without the shared filesystem receives the snapshot, never a path it cannot read. Edits during the run do not change the plan.
 
 Parse the required fields before any bot is created: name, one job, description, skills required, plan home, merge policy. A missing field stops the run. Report the template source in the first leader message.
+
+Before any bot is created, apply `../autobot-setup/reference/template-checks.md`, relative to this skill directory. A blocker there stops the run. When that file is unreadable, apply only the six named fields and say the full list was not loaded.
 
 ## Phase 1 — Provision
 
