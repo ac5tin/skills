@@ -25,6 +25,7 @@ For each check, confirm:
 
 ## Decisions
 
+- Every consultation the template requires is recorded with its outcome before the leader decides.
 - Every product, design and scope choice is decided, with a reason.
 - No open question, no TBD owner, no "ask later".
 - A choice that needs authority the leader lacks states the chosen option and the authority it needs.

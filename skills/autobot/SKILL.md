@@ -50,11 +50,11 @@ Provisioning is complete when the driver acknowledges the brief, can load `imple
 
 ## Phase 2 — Plan and human gate 1
 
-The driver writes the plan with `implementation-plan` on its own initiative and presents it to the leader. It starts no implementation.
+The driver writes the plan with `implementation-plan` on its own initiative and presents it to the leader. It may ask any other bot for technical input while it plans; that input is advice, not work and not approval. It starts no implementation.
 
 The leader verifies with `playbooks/verify-plan.md` and issues APPROVE or CHANGES with numbered reasons. CHANGES returns the plan to the driver. The leader resolves every open product, design and scope choice with the driver first. A plan with an open question is not approved.
 
-When the template names consultations, the leader obtains them and records the outcome before deciding. The leader still issues the decision. This skill names no reviewer and implements no reviewer protocol.
+When the template names consultations, the template says who obtains each one. The leader records the outcome before deciding. The leader still issues the decision. This skill names no reviewer and implements no reviewer protocol.
 
 On APPROVE, show the human the leader-approved plan. First line: `Leader-approved plan: approve, or name a change`. Then the decisions made, each overridable, and any blocker that needs human action. No options to pick from. Implementation starts only after the human approves.
 
