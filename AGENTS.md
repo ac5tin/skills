@@ -5,8 +5,9 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 ## Structure
 
 - `skills/` — Each subdirectory is a skill containing a `SKILL.md` with YAML frontmatter (`name`, `description`) and instructions.
-  - `autopilot/` — Supervised end-to-end task ownership: leader spawns a PIC, two human gates (plan, rollout). Triggered only via explicit invocation.
-  - `autopilot-setup/` — Manage optional autopilot boot instructions. Triggered only via explicit invocation.
+  - `autobot/` — One task through one driver bot the leader owns: plan, build, release, retire. Two human approvals. Triggered only via explicit invocation.
+  - `setup-autobot/` — Create, inspect or validate the autobot template. Triggered only via explicit invocation.
+  - `implementation-plan/` — Required plan structure and the definition-of-done mapping.
   - `code-quality/` — General clean-code best practices (KISS, DRY, simplicity).
   - `golang-code/` — Go coding standards: error handling, naming, anti-patterns, pointers, function signatures, linting.
   - `go-service-scaffold/` — Scaffold a Go microservice (includes reference templates).
@@ -14,7 +15,7 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
   - `orchestrate/` — Multi-agent orchestration: subagent fan-out, isolated parallel reviews, arbitration. Triggered only via explicit invocation.
   - `trivy-scanner/` — Run Trivy vulnerability scans via Podman.
 
-- `docs/` — Human-facing guides. `autopilot-harnesses.md` covers autopilot support tiers and per-harness setup.
+- `docs/` — Human-facing guides. `autobot-harnesses.md` covers supported harnesses and per-harness setup.
 
 - Plugin packaging (no `skills/` changes needed; new skills are picked up automatically):
   - `.claude-plugin/` — Claude Code, Claude Desktop, ZCode. `version` is deliberately omitted; the plugin entry pins a `source.sha` (github object) that CI bumps per release — the pinned SHA is the version and drives ZCode update detection.

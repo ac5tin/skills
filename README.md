@@ -6,8 +6,9 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 
 | Skill | Description |
 |-------|-------------|
-| `autopilot` | Supervised end-to-end ownership with explicit plan and rollout approval. Use only via `/autopilot` or `@autopilot`. |
-| `autopilot-setup` | Inspect or manage optional autopilot boot instructions. Use only via `/autopilot-setup` or `@autopilot-setup`. |
+| `autobot` | Run one task through one driver bot the leader owns. Two human approvals: the plan, then the exact release. Use only via `/autobot` or `@autobot`. |
+| `setup-autobot` | Create, inspect or validate the autobot template. Use only via `/setup-autobot` or `@setup-autobot`. |
+| `implementation-plan` | Required structure and definition-of-done mapping for implementation plans. Use when writing, revising or checking a plan. |
 | `code-quality` | Enforce clean, simple, maintainable code best practices. Use when planning, implementation and code reviews. |
 | `go-service-scaffold` | Scaffolds new Go microservices from scratch with a production-ready layered architecture: Fiber HTTP, Bun ORM, Unit of Work, dual-interface services, domain packages, task queues, cron workers. Use when creating a new Go project, bootstrapping a Go service, or asked to scaffold a Go API. |
 | `golang-code` | Enforce good Go (Golang) code styles and best practices. Use when writing and reviewing Go code. |
@@ -15,7 +16,7 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 | `orchestrate` | Run multi-agent orchestration: fan out work to subagents, run isolated parallel reviews, arbitrate verdicts. Use only when explicitly invoked via `/orchestrate` or `@orchestrate`. |
 | `trivy-scanner` | Scan the current project for vulnerabilities using Trivy via Podman. |
 
-Per-harness setup, support tiers and limits: [docs/autopilot-harnesses.md](docs/autopilot-harnesses.md).
+Per-harness setup, support tiers and limits: [docs/autobot-harnesses.md](docs/autobot-harnesses.md).
 
 ## Installation
 
