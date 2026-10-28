@@ -46,7 +46,7 @@ The brief also says: write the plan at once without being asked; present it to t
 
 The leader equips the driver to finish alone: tools, scripts, access and permissions, as far as the harness allows. A gap it cannot close is either closed before gate 1 or recorded in the plan as a human handoff pack with best time, commands, expected output, done signal and rollback. A plan that leaves the driver unable to reach the definition of done is CHANGES.
 
-Provisioning is complete when the driver acknowledges the brief, can load `implementation-plan`, and can message the leader. If the harness cannot install the skill, the driver receives an immutable snapshot; record that mode and disclose it at gate 1. If neither is possible, stop before planning. Gate 1 also discloses any capability that had to be arranged by hand.
+Provisioning is complete when the driver acknowledges the brief, can load `implementation-plan`, and can message the leader. Test the load: ask the driver to load `implementation-plan` and quote one heading. A local skill store that lists nothing is not proof the skill is missing; a plugin harness supplies it without an install. If the driver cannot load it, send an immutable snapshot; record that mode and disclose it at gate 1. If neither is possible, stop before planning. Gate 1 also discloses any capability that had to be arranged by hand.
 
 ## Phase 2 — Plan and human gate 1
 
