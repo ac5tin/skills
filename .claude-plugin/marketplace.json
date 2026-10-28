@@ -11,7 +11,7 @@
       "source": {
         "source": "github",
         "repo": "ac5tin/skills",
-        "sha": "72f3e1424295c5fb01313cd8901223b905712a8f"
+        "sha": "3eebfb52bd31156b62c2923a5cf8b286bb2e45b2"
       },
       "description": "Reusable agent skills: code quality, Go, workflow, orchestration, and security scanning.",
       "category": "development"
