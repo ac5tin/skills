@@ -15,6 +15,8 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 | `orchestrate` | Run multi-agent orchestration: fan out work to subagents, run isolated parallel reviews, arbitrate verdicts. Use only when explicitly invoked via `/orchestrate` or `@orchestrate`. |
 | `trivy-scanner` | Scan the current project for vulnerabilities using Trivy via Podman. |
 
+Per-harness setup, support tiers and limits: [docs/autopilot-harnesses.md](docs/autopilot-harnesses.md).
+
 ## Installation
 
 Install as a plugin (updates follow new commits on `main`, no tags):

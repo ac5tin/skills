@@ -30,30 +30,37 @@ Boot is plain instruction content, including `.mdc`, not a native Cursor rule or
 
 ## Preflight and assign
 
-Leader preflight is minimal: the selected boot is readable, a spawn/continue capability exists, and the invocation contains a task reference (URL, path, or id). Do not fetch or open that reference. Then **spawn and brief the PIC immediately**. The leader does not research the repo, docs, or design before the PIC reports; that is the PIC's job. The PIC discovers actual tools, access, communication, permissions, and verification/deployment environment, and its plan reports any missing capability with the exact unblock requirement. Required tools mean real access: “use Claude Code for development” requires that CLI/tool, not a Claude model. If required access, owner communication, or supervision is missing, **do not begin implementation**. Before gate 1, everyone uses safe read-only/nonmutating probes only: no comments, pushes, issue edits, or secret changes. The invocation authorizes creating, placing, and briefing the PIC (subagent or Bot), nothing else.
+Leader preflight is minimal: the selected boot is readable, a spawn/continue capability exists, and the invocation contains a task reference (URL, path, or id). Do not fetch or open that reference. Then **spawn and brief the PIC immediately**. The leader does not research the repo, docs, or design before the PIC reports; that is the PIC's job. The PIC discovers actual tools, access, communication, permissions, and verification/deployment environment, and its plan reports any missing capability with the exact unblock requirement. Required tools mean real access: “use Claude Code for development” requires that CLI/tool, not a Claude model. If required access, owner communication, or supervision is missing, **do not begin implementation**. Before gate 1, everyone uses safe read-only/nonmutating probes only: no comments, pushes, issue edits, or secret changes. The invocation authorizes creating, placing, and briefing the PIC (subagent, agent, or Bot), nothing else.
 
-Choose by capability, never invented agent/model IDs:
+Choose the PIC by capability, never by harness name or invented agent/model IDs. Probe in order and take the first grade the harness can actually complete:
+
+1. Creates an independent agent it can message and halt → **full bot**.
+2. Else spawns a subagent it can continue → **background subagent**.
+3. Else spawns a subagent that returns once → **foreground subagent**.
+
+Prefer the highest grade; a subagent is never a silent downgrade, so gate 1 names the mode and why. Missing continuation or supervision stops the run; with no halt, supervision is bounded milestones only. No spawn capability at all means the harness is unsupported, not that the leader does the work alone.
 
 | PIC mode | Supervision |
 | --- | --- |
+| Full bot | Independent runtime with actual bidirectional messaging/control |
 | Background subagent | Bounded checkpoint-sized milestone, completion notification, leader review, continue same PIC (or handoff rule) |
 | Foreground subagent | Bounded milestone returns to leader for review and continuation |
-| Full bot | Independent runtime with actual bidirectional messaging/control |
 
-Known harness mappings; use only what the running harness actually exposes:
+Known mappings are shortcuts; the probe is normative, and a row you cannot verify is not a capability:
 
-| Harness | Spawn PIC | Continue same PIC |
-| --- | --- | --- |
-| Claude Code | `Agent` tool, `general-purpose` or custom type (never one-shot Explore/Plan) | `SendMessage` to the returned agent ID or name |
-| OpenCode V2 | `subagent` with `agent: "general"`, `background: true` if supported | Pass the returned `sessionID` |
-| Grok Build | `spawn_subagent`, `general-purpose`; `get_command_or_subagent_output` only after completion | `resume_from` the completed subagent ID |
-| ZCode | `Agent` tool, general-purpose subagent | Handoff rule below unless resume is discovered |
-| Grok Bot | New leader-managed Bot, below | Direct message the same Bot |
-| Other | Any discovered spawn tool | Discovered continuation, else handoff rule |
+| Harness | Spawn | Continue | Halt | Retire |
+| --- | --- | --- | --- | --- |
+| Grok Bot | New leader-managed Bot | Direct message | Bot control | Hide |
+| OpenBot | `create_agent` (Dr Eggbot when accessible) | `send_message` to the same agent ID | `interrupt_agent`, leader-started turns only | Delete if exposed, else mark |
+| Claude Code | `Agent` tool, `general-purpose` or custom (never one-shot Explore/Plan) | `SendMessage` to the agent ID or name | Discovered | Discovered |
+| OpenCode V2 | `subagent` with `agent: "general"`, `background: true` if supported | Pass the returned `sessionID` | None exposed | None |
+| Grok Build | `spawn_subagent`, `general-purpose`; output only after completion | `resume_from` the completed subagent ID | None exposed | None |
+| ZCode | `Agent` tool, general-purpose subagent | Discovered, else handoff rule | Discovered | Discovered |
+| Other | Any discovered spawn tool | Discovered, else handoff rule | Discovered | Discovered |
 
-**Grok Bot:** the PIC is always a new Bot the leader Bot creates and manages, never a subagent. Have the invoker's Dr Eggbot design and create it when accessible (one job: own this task; explicit anti-jobs; leader's approval boundaries), else available bot-creation tools; having neither is a blocker. The leader answers Dr Eggbot's intake itself and lists those choices in the gate 1 plan for the human to change; no separate prompt. Place the Bot in the leader's section, or report the one manual move needed. It reports to the leader by direct message or group chat, not to the human. Hide a replaced or finished PIC Bot rather than delete it, preserving its audit trail.
+**Full bot:** the PIC is a new agent the leader creates and manages, never a subagent. Have the invoker's Dr Eggbot design it when accessible (one job: own this task; explicit anti-jobs; leader's approval boundaries), else the harness's creation tool; having neither is a blocker unless a lower grade is accepted at gate 1. The invocation authorizes exactly one PIC agent. The leader answers Dr Eggbot's intake itself and lists those choices in the gate 1 plan; no separate prompt. Give it a one-job description and the brief as its first message, place it in the leader's section or report the one manual move (`assign_agent_section` on OpenBot), and keep it reporting to the leader, not the human. OpenBot: notifications off; its own workspace, not the invocation cwd, so the brief carries the repo's absolute path and an immutable boot snapshot (`./autopilot.md` does not resolve there). Retire a finished or replaced PIC as the table says: hide where the harness hides, otherwise delete with a delete or archive action if exposed, else retitle it `PIC — done, safe to delete` and report its name and ID. A mark is not a delete: never claim a delete without a confirmed result.
 
-**Handoff rule:** the PIC role outlives its agent. Keep continuing the same PIC (same Bot on Grok Bot); replace it only when it cannot continue. A replacement, created the same way, starts only once the previous PIC has returned with nothing in flight, confirmed it halted, or been fenced: its pushes blocked (branch protection or revoked push access, verified) or write/deploy access revoked. A force-with-lease on the replacement's own pushes guards history but is not a fence. A possibly in-flight deploy or other non-git mutation needs a clean return, confirmed halt, or revoked access. Until then, report uncertainty; never run two writers. Give the replacement a state packet: approved plan, frozen boot context, current artifact/revision, completed milestones with evidence, open deviations, and next milestone. It acknowledges the packet before work.
+**Handoff rule:** the PIC role outlives its agent. Keep continuing the same PIC (same Bot on Grok Bot, same agent on OpenBot); replace it only when it cannot continue. A replacement, created the same way, starts only once the previous PIC has returned with nothing in flight, confirmed it halted, or been fenced: its pushes blocked (branch protection or revoked push access, verified) or write/deploy access revoked. A force-with-lease on the replacement's own pushes guards history but is not a fence. A possibly in-flight deploy or other non-git mutation needs a clean return, confirmed halt, or revoked access. Until then, report uncertainty; never run two writers. Give the replacement a state packet: approved plan, frozen boot context, current artifact/revision, completed milestones with evidence, open deviations, and next milestone. It acknowledges the packet before work.
 
 Completion notifications are not timers: obey no-poll instructions. No nested delegation requirement; the leader dispatches optional helpers. Promise timed monitoring only with real scheduler/control tools; if required supervision cannot be provided, stop.
 

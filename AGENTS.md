@@ -14,6 +14,8 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
   - `orchestrate/` — Multi-agent orchestration: subagent fan-out, isolated parallel reviews, arbitration. Triggered only via explicit invocation.
   - `trivy-scanner/` — Run Trivy vulnerability scans via Podman.
 
+- `docs/` — Human-facing guides. `autopilot-harnesses.md` covers autopilot support tiers and per-harness setup.
+
 - Plugin packaging (no `skills/` changes needed; new skills are picked up automatically):
   - `.claude-plugin/` — Claude Code, Claude Desktop, ZCode. `version` is deliberately omitted; the plugin entry pins a `source.sha` (github object) that CI bumps per release — the pinned SHA is the version and drives ZCode update detection.
   - `.codex-plugin/`, `.agents/plugins/` — Codex. `version` is a constant `0.0.0` because Codex requires the field.

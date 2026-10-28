@@ -7,9 +7,13 @@ description: Use only when the user explicitly invokes /autopilot-setup or @auto
 
 ## Scope and invocation
 
-Manage boot instructions only when explicitly invoked. Natural language is sufficient, for example `/autopilot-setup show effective`, `@autopilot-setup add to global: prefer existing test scripts`, or `/autopilot-setup update "./team taste.mdc": use the deployment playbook at docs/deploy.md`. This is skill syntax, not an installed CLI.
+Manage boot instructions and report the detected harness only when explicitly invoked. Natural language is sufficient, for example `/autopilot-setup show effective`, `/autopilot-setup show harness`, `@autopilot-setup add to global: prefer existing test scripts`, or `/autopilot-setup update "./team taste.mdc": use the deployment playbook at docs/deploy.md`. This is skill syntax, not an installed CLI.
 
 Setup is separate interactive configuration, not a third gate inside an active autopilot run. Do not install anything or modify harness permissions, model configuration, versions, or releases. No secret material in examples or generated instructions.
+
+## Show harness
+
+`/autopilot-setup show harness` reports, without writing anything: the grade autopilot will use here (full bot, background subagent, or foreground subagent), the spawn/continue/halt/retire capabilities that decided it, and the one setup action left, such as creating Dr Eggbot, allowing agent creation, or choosing a section. Probe the tools this session actually exposes; a harness name is not a capability. Read the installed plugin's `docs/autopilot-harnesses.md` when it is reachable, and say when it is not. Never write or edit the skill, a JSON config, harness permissions, or model settings for this.
 
 ## Select the file
 
