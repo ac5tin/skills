@@ -55,7 +55,9 @@ The mapping is the gate:
 ## Quality
 
 - One living plan, revised in place. No new artifact per version.
+- The title is stable. The version lives in the front matter, not the title.
+- Prune superseded drafts, duplicate uploads and obsolete figures.
 - Front matter version and status are current.
 - Rejected alternatives stay short, in the decisions section.
-- Figures have alt text or a caption.
+- Figures have alt text or a caption, and sit in the same place as the plan.
 - Cite the source and date for any external claim.
