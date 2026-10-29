@@ -52,7 +52,7 @@ Provisioning is complete when the driver acknowledges the brief, can load `imple
 
 The driver writes the plan with `implementation-plan` on its own initiative and presents it to the leader. It may ask any other bot for technical input while it plans; that input is advice, not work and not approval. It starts no implementation.
 
-The leader verifies with `playbooks/verify-plan.md` and issues APPROVE or CHANGES with numbered reasons. CHANGES returns the plan to the driver. The leader resolves every open product, design and scope choice with the driver first. A plan with an open question is not approved.
+The leader verifies with `playbooks/verify-plan.md` and issues APPROVE or CHANGES with numbered reasons. CHANGES returns the plan to the driver, and the leader waits; it does not investigate in parallel. The leader resolves every open product, design and scope choice with the driver first. A plan with an open question is not approved.
 
 When the template names consultations, the template says who obtains each one. The leader records the outcome before deciding. The leader still issues the decision. This skill names no reviewer and implements no reviewer protocol.
 
@@ -86,7 +86,8 @@ Report to the human: outcome, exact revision and target, checks, remaining risks
 
 - The leader owns the driver: creation, placement, model from the template, hold, replacement, retirement.
 - The leader makes every product, design and scope decision with the driver, following template policy.
-- The leader never writes the implementation.
+- The leader does not contribute work to the task. It may read files and git history. It does not write, fix, build, test, install, deploy, probe or run containers; a change of any size goes to the driver. Anything else it needs, it asks the driver for.
+- The driver is the only writer and the only operator.
 - The human approves the plan and the exact release. The human is never asked to choose between options.
 - Two writers never run. To hold, fence, replace or retire a driver, read `playbooks/recover-pic.md` first.
 

@@ -1,6 +1,6 @@
 # Verify plan
 
-The leader reads the plan as an owner, not an editor. Output is APPROVE or CHANGES with numbered reasons. CHANGES names the missing item and the section that must carry it. The leader never rewrites the plan.
+The leader reads the plan as an owner, not an editor. Output is APPROVE or CHANGES with numbered reasons. CHANGES names the missing item and the section that must carry it. The leader never rewrites the plan. The leader does not execute: evidence comes from the driver, and a thin claim is a CHANGES, not a command to run.
 
 ## Structure
 
