@@ -6,9 +6,6 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 
 | Skill | Description |
 |-------|-------------|
-| `autobot` | Run one task through one driver bot the leader owns. Two human approvals: the plan, then the exact release. Use only via `/autobot` or `@autobot`. |
-| `autobot-setup` | Create, inspect or validate the autobot template. Use only via `/autobot-setup` or `@autobot-setup`. |
-| `autobot-doctor` | Check an autobot setup read-only and name what blocks a run. Use only via `/autobot-doctor` or `@autobot-doctor`. |
 | `implementation-plan` | Required structure and definition-of-done mapping for implementation plans. Use when writing, revising or checking a plan. |
 | `code-quality` | Enforce clean, simple, maintainable code best practices. Use when planning, implementation and code reviews. |
 | `go-service-scaffold` | Scaffolds new Go microservices from scratch with a production-ready layered architecture: Fiber HTTP, Bun ORM, Unit of Work, dual-interface services, domain packages, task queues, cron workers. Use when creating a new Go project, bootstrapping a Go service, or asked to scaffold a Go API. |
@@ -17,7 +14,11 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 | `orchestrate` | Run multi-agent orchestration: fan out work to subagents, run isolated parallel reviews, arbitrate verdicts. Use only when explicitly invoked via `/orchestrate` or `@orchestrate`. |
 | `trivy-scanner` | Scan the current project for vulnerabilities using Trivy via Podman. |
 
-Per-harness setup, support tiers and limits: [docs/autobot-harnesses.md](docs/autobot-harnesses.md).
+Per-harness setup, support tiers and limits: [docs/dr-autobot.md](docs/dr-autobot.md).
+
+## Dr. AutoBot
+
+An agent template that creates autonomous PIC driver bots. Install it from [`agents/dr-autobot/`](agents/dr-autobot/). The created driver uses `implementation-plan` and `next-steps`, and carries a 5-minute self-check routine.
 
 ## Installation
 
