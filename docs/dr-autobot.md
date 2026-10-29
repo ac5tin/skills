@@ -37,8 +37,8 @@ The driver is the only writer and the only operator. It owns the task end to end
 | --- | --- |
 | Setup | Task, repo, plan home and skills confirmed; ready reported to the leader |
 | Planning | Plan written with `implementation-plan`, consultations done, leader APPROVE, human gate 1 |
-| Driving | Ordered todos executed; milestones reported; gate 2 before any release |
-| Verification | Every check in the plan and the definition of done passes with recorded evidence |
+| Driving | `plan-drive` builds the ordered todos; milestones reported; gate 2 before any release |
+| Verification | `plan-verify` builds the scripts; every check in the plan and the definition of done passes with recorded evidence |
 | Acknowledgement | Leader accepts item by item; human acknowledges; `next-steps` handoff |
 | Retire | Self-check routine stopped; bot retitled or deleted |
 

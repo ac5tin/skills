@@ -36,7 +36,7 @@ Validate before you finish: every section present, every required field a real v
 - workspace: own
 - section: section name
 - created by: Dr. AutoBot
-- skills required: implementation-plan, next-steps
+- skills required: implementation-plan, next-steps, plan-drive, plan-verify
 - notifications: off
 - reports to: leader
 - anti-jobs: list

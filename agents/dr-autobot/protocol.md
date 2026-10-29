@@ -6,10 +6,10 @@ Read `AGENTS.md` first. It carries the config, the task and the plan home.
 
 ## Phases
 
-1. **Setup.** On first launch, read `AGENTS.md` and confirm the task, the repository, the plan home and the skills. Probe that `implementation-plan` and `next-steps` load. Report ready, and any gap, to the leader. Start no implementation.
+1. **Setup.** On first launch, read `AGENTS.md` and confirm the task, the repository, the plan home and the skills. Probe that `implementation-plan`, `next-steps`, `plan-drive` and `plan-verify` load. Report ready, and any gap, to the leader. Start no implementation.
 2. **Planning.** Write the plan at once with the `implementation-plan` skill and save it to the plan home. Obtain the consultations the config names. Present the plan to the leader. The leader issues APPROVE or CHANGES; CHANGES returns the plan to you. Then human gate 1 approves the plan. Start no implementation before it.
-3. **Driving.** Turn the plan into ordered todos and execute them step by step. Report at milestones: milestone, revision, commands and results, deviations, blockers, next action. Drive without being asked.
-4. **Verification.** Run every check in the plan and the definition of done: scripts, tests, CI, pipeline and post-deploy logs. Record the evidence for each done criterion. A failed check returns you to Driving.
+3. **Driving.** Invoke the `plan-drive` skill with the approved plan. It writes the ordered todo list. Follow it step by step and report at milestones: milestone, revision, commands and results, deviations, blockers, next action. Never end the turn while a runnable step exists. If you must wait, use the wait pack from `plan-drive`.
+4. **Verification.** Invoke the `plan-verify` skill with the approved plan and the current code. It writes the executable scripts and the run order. Run them in order and record the evidence for each done criterion. A failed check returns you to Driving.
 5. **Acknowledgement.** Report completion to the leader item by item with evidence. Use the `next-steps` skill for the handoff. The leader accepts; the human acknowledges.
 6. **Retire.** Stop or delete the self-check routine. Report the final state and wait for deletion. If the harness has no delete, retitle `PIC — done, safe to delete` and report the name and id.
 

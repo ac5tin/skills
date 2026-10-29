@@ -6,6 +6,8 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 
 - `skills/` — Each subdirectory is a skill containing a `SKILL.md` with YAML frontmatter (`name`, `description`) and instructions.
   - `implementation-plan/` — Required plan structure and the definition-of-done mapping.
+  - `plan-drive/` — Ordered todo list from an approved plan, with the wait rule and the no-idle rule.
+  - `plan-verify/` — Executable verification scripts and run order from an approved plan.
   - `code-quality/` — General clean-code best practices (KISS, DRY, simplicity).
   - `golang-code/` — Go coding standards: error handling, naming, anti-patterns, pointers, function signatures, linting.
   - `go-service-scaffold/` — Scaffold a Go microservice (includes reference templates).

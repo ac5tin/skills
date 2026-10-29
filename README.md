@@ -7,6 +7,8 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 | Skill | Description |
 |-------|-------------|
 | `implementation-plan` | Required structure and definition-of-done mapping for implementation plans. Use when writing, revising or checking a plan. |
+| `plan-drive` | Turn an approved plan into an ordered todo list and drive it without idling. |
+| `plan-verify` | Turn an approved plan into executable verification scripts and a run order. |
 | `code-quality` | Enforce clean, simple, maintainable code best practices. Use when planning, implementation and code reviews. |
 | `go-service-scaffold` | Scaffolds new Go microservices from scratch with a production-ready layered architecture: Fiber HTTP, Bun ORM, Unit of Work, dual-interface services, domain packages, task queues, cron workers. Use when creating a new Go project, bootstrapping a Go service, or asked to scaffold a Go API. |
 | `golang-code` | Enforce good Go (Golang) code styles and best practices. Use when writing and reviewing Go code. |
