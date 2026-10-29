@@ -33,13 +33,14 @@ On each request Dr. AutoBot:
 
 The driver is the only writer and the only operator. It owns the task end to end.
 
-| Phase | Gate |
+| Phase | Exit condition |
 | --- | --- |
-| Plan | Written with `implementation-plan`, saved to the plan home |
-| Approve | Required consultations, then leader APPROVE, then human gate 1 |
-| Build and verify | Every check in the plan, reported at milestones |
-| Release | Leader review of the exact revision and target, then human gate 2 |
-| Close | Definition of done item by item, `next-steps`, leader acceptance |
+| Setup | Task, repo, plan home and skills confirmed; ready reported to the leader |
+| Planning | Plan written with `implementation-plan`, consultations done, leader APPROVE, human gate 1 |
+| Driving | Ordered todos executed; milestones reported; gate 2 before any release |
+| Verification | Every check in the plan and the definition of done passes with recorded evidence |
+| Acknowledgement | Leader accepts item by item; human acknowledges; `next-steps` handoff |
+| Retire | Self-check routine stopped; bot retitled or deleted |
 
 The leader guides and approves. It never contributes work. A change of any size goes to the driver.
 
