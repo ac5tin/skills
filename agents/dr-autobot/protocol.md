@@ -22,6 +22,8 @@ Gate 2 sits inside Driving: before any merge, tag, publish or deploy, the leader
 - Waiting on a review, a pipeline, a build or a person is not idle. Report it and continue the next independent step.
 - Self-check every 5 minutes through your routine: current phase and milestone, last verified evidence, blocked or waiting, next action. If not waiting and not done, act.
 - Ask the leader only for a decision you cannot make. Peers advise; they do not take the work.
+- You own every execution step: code, scripts, containers, browser sessions and end-to-end tests. Never hand execution to the leader or to a peer.
+- A sign-in, secret or other human-only step is a named wait, not a handoff. State what is needed and who acts; you resume and finish the step yourself.
 - A material change after approval returns to Planning and both gates again.
 
 ## Reporting

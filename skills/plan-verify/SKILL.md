@@ -13,9 +13,9 @@ Use this at the start of Verification, before the first check runs.
 
 Every done criterion in the plan maps to at least one check. List each with its expected result, inputs, starting state and evidence location. A criterion without a check is a blocker: return to Planning.
 
-## 2. Interview the repo and the driver
+## 2. Interview the repo
 
-Answer from the code, not from memory. Ask the driver or the leader only what the code cannot show:
+Answer from the code by reading it and running read-only commands. Never ask the leader or a peer to run, produce or confirm evidence. Find:
 
 - What starts the system: command, port, environment, seed data, auth.
 - What proves each check: the exact command or observation.
@@ -23,7 +23,7 @@ Answer from the code, not from memory. Ask the driver or the leader only what th
 - What is safe to run twice: destructive steps, data, credentials.
 - How evidence is captured: exit code, output, log, screenshot, CI run URL.
 
-Record every answer in the verification README. An assumption is a risk, not a fact.
+Record every answer in the verification README. What you cannot observe is a risk, not a fact.
 
 ## 3. Write the scripts
 
@@ -39,6 +39,8 @@ Write to the path the plan names. If it names none, use `verification/<task-slug
 ## 4. Prove the scripts
 
 Run `run-all.sh` once against the current state. Fix what fails. A script never run is a draft, not a deliverable. If the state cannot run yet because the code is not written, mark the check `PENDING` and run it during Verification.
+
+You run every script yourself, including browser and end-to-end flows, with your own session. No check is delegated to the leader or to a peer.
 
 ## 5. Output
 
