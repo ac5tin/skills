@@ -1,0 +1,10 @@
+{
+  "name": "ac5tin-skills",
+  "displayName": "ac5tin Skills",
+  "description": "Reusable agent skills: code quality, Go, workflow, orchestration, and security scanning.",
+  "author": { "name": "Austin Chang" },
+  "homepage": "https://github.com/ac5tin/skills",
+  "repository": "https://github.com/ac5tin/skills",
+  "keywords": ["skills", "golang", "code-quality", "trivy"],
+  "skills": "./skills/"
+}

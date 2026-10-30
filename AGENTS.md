@@ -23,6 +23,7 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
   - `.claude-plugin/` — Claude Code, Claude Desktop, ZCode. `version` is deliberately omitted; the plugin entry pins a `source.sha` (github object) that CI bumps per release — the pinned SHA is the version and drives ZCode update detection.
   - `.codex-plugin/`, `.agents/plugins/` — Codex. `version` is a constant `0.0.0` because Codex requires the field.
   - `.grok-plugin/` — Grok Build. `marketplace.json` is a self-hosted catalog whose single `url` source points back at this repo with no pinned SHA, so it tracks `main`; `plugin.json` is the plugin manifest (`skills` points at `./skills/`). No `plugin-index.json` — that is generated only inside the official `xai-org/plugin-marketplace` repo.
+  - `.cursor-plugin/` — Cursor and Grok Bot share this format. `marketplace.json` is a single-plugin catalog with `source: "."`; its schema allows only `name`, `source`, `description`, `minClientVersions` per entry. `plugin.json` `author` takes `name`/`email` only, so no `url`. No `version`, consistent with the no-version convention.
   - `package.json` (`pi.skills`) — Pi.
   - `.opencode/plugins/ac5tin-skills.js` + root `index.js` — OpenCode v2; registers every `skills/*/SKILL.md`.
   - No tags or version bumps. The only release automation is `.github/workflows/pin-plugin-sha.yml`, which re-pins `source.sha` when plugin content changes; otherwise a new commit is a new release.
