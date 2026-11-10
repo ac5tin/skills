@@ -11,6 +11,33 @@ The map is the maintained source of truth. Every file below is written once at c
 
 No two entries share an id or a file. Renaming one changes its id; the maintenance playbook records the old id in the report.
 
+### 1.1 Priority
+
+Every feature and every use case carries one priority: `P0`, `P1`, `P2`, or `P3`.
+
+| Level | Rule |
+|---|---|
+| `P0` | The app is unusable, or data or money is lost, if this breaks. Auth, the primary create/read path, payment, the README quickstart journey. |
+| `P1` | Most users need it weekly. Main CRUD variants, search, settings that shape the main flow. |
+| `P2` | Secondary behavior. Export, archive, bulk actions, rare states. |
+| `P3` | Edge, cosmetic, admin-only, or deprecated. |
+
+Caps and defaults:
+
+- At least one `P0` feature and one `P0` use case.
+- No more than 30 percent of entries at `P0`.
+- A use case is at least as critical as its most critical feature. Raise it when the journey is the product's main path.
+- Unsure: `P1`.
+
+Storage:
+
+- `map.json`: `"priority": "P0"` on every entry.
+- Entry file: `**Priority:** P0 - <one-line reason>` directly after the H1 paragraph.
+- Index: a `Priority` column.
+- The three must agree. `validate.py` fails a mismatch.
+
+Selection: `p0` (or `basic`) runs every `P0` entry. `p0-p1` runs a range. `all` ignores priority.
+
 ## 2. Feature file
 
 H1 plus one paragraph of user-visible behavior. Then exactly these H2s, in order:
@@ -56,7 +83,7 @@ A use case crosses two or more features and ends in a state a user can see.
 
 `validate.py` checks that every map file appears in its index.
 
-Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{FEATURE_ID}}`, `{{FEATURE_NAME}}`, `{{FEATURE_FILE}}`, `{{UC_ID}}`, `{{UC_NAME}}`, `{{UC_FILE}}`, `{{SCRIPT}}`, `{{UC_SCRIPT}}`, `{{SUMMARY}}`. Every token must be replaced before `validate.py` runs.
+Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{FEATURE_ID}}`, `{{FEATURE_NAME}}`, `{{FEATURE_FILE}}`, `{{UC_ID}}`, `{{UC_NAME}}`, `{{UC_FILE}}`, `{{SCRIPT}}`, `{{UC_SCRIPT}}`, `{{SUMMARY}}`, `{{PRIORITY}}`, `{{PRIORITY_REASON}}`. Every token must be replaced before `validate.py` runs.
 
 ## 5. `map.json`
 
@@ -77,10 +104,10 @@ Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{FEATURE_ID}}`
   },
   "evidence_root": ".app-tester/artifacts",
   "features": [
-    {"id": "feat-x", "file": "references/features/x.md", "script": "scripts/test-x.py"}
+    {"id": "feat-x", "priority": "P0", "file": "references/features/x.md", "script": "scripts/test-x.py"}
   ],
   "usecases": [
-    {"id": "uc-y", "file": "references/usecases/y.md", "script": "scripts/test-uc-y.py", "features": ["feat-x"]}
+    {"id": "uc-y", "priority": "P0", "file": "references/usecases/y.md", "script": "scripts/test-uc-y.py", "features": ["feat-x"]}
   ],
   "limits": ["no browser driver"]
 }

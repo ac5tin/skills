@@ -4,11 +4,18 @@ Drive the real app with its own harness. Report one status per selected entry, w
 
 ## 1. Select
 
-- Explicit ids: use them.
-- `all`: every id in `references/map.json`.
-- Nothing: print both indexes with their ids and ask. Do not guess.
+| Selection | Entries to run |
+|---|---|
+| `all` | Every id in `references/map.json` |
+| `p0` or `basic` | Every entry with priority `P0` |
+| `p1`, `p2`, `p3` | Entries at that level |
+| `p0-p1` | Every entry in the range |
+| Explicit ids | Those ids |
 
-An id missing from `map.json` is an error, not a new test.
+- One selection per run. Do not mix ids with a priority.
+- A priority run covers both features and use cases at that level.
+- Nothing: print both indexes with ids and priorities, then ask. Do not guess.
+- An id missing from `map.json` is an error, not a new test.
 
 ## 2. Preflight
 
@@ -28,8 +35,8 @@ An id missing from `map.json` is an error, not a new test.
 
 ## 4. Report
 
-| ID | Status | Reason | Evidence |
-|---|---|---|---|
+| Priority | ID | Status | Reason | Evidence |
+|---|---|---|---|---|
 
 Write `summary.md` and `summary.json` to `.app-tester/artifacts/<run>/`. Exit non-zero when any selected entry is `FAIL`.
 

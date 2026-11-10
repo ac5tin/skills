@@ -2,6 +2,8 @@
 
 {{SUMMARY}}
 
+**Priority:** {{PRIORITY}} - {{PRIORITY_REASON}}
+
 ## Features involved
 
 - [<feature name>](../features/<feature-file>.md)

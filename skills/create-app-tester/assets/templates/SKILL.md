@@ -21,6 +21,7 @@ Read `references/map.json` before a run. It lists every id, file, script, and en
 ## Fast paths
 
 - All: `references/playbooks/test.md`, selection `all`.
+- Basic regression: selection `p0` (alias `basic`).
 - One feature: `test feat-<slug>`.
 - One use case: `test uc-<slug>`.
 

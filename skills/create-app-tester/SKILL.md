@@ -1,6 +1,6 @@
 ---
 name: create-app-tester
-description: Use when the user runs /create-app-tester, or asks to create, update, or recreate a repo-local app tester. Scans the repo, interviews the invoking agent, maps features and use cases, and generates .agents/skills/<app>-app-tester with reusable scripts plus test and maintenance playbooks.
+description: Use when the user runs /create-app-tester, or asks to create, update, or recreate a repo-local app tester. Scans the repo, interviews the invoking agent, maps priority-tagged features and use cases, and generates .agents/skills/<app>-app-tester with reusable scripts plus test and maintenance playbooks.
 ---
 
 # Create an app tester
@@ -50,7 +50,7 @@ Gate: every answer is recorded or defaulted. Never ask again in a later phase.
 
 ## Phase 3 - Map
 
-Read `references/map-contract.md`. Map 5-12 features and 3-8 use cases. A feature is a user-visible capability with an entry point, not a module. A use case is a 3-8 step journey across two or more features. Give each a stable id and code anchors.
+Read `references/map-contract.md`. Map 5-12 features and 3-8 use cases. A feature is a user-visible capability with an entry point, not a module. A use case is a 3-8 step journey across two or more features. Give each a stable id and code anchors. Give every entry a priority `P0`-`P3` with a one-line reason: `P0` is the critical path, at most 30 percent of entries.
 
 Gate: more than 15 features without a selection means ask which subset matters and list the rest as `unmapped`.
 

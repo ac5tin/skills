@@ -2,6 +2,8 @@
 
 {{SUMMARY}}
 
+**Priority:** {{PRIORITY}} - {{PRIORITY_REASON}}
+
 ## Sub-features
 
 - `{{FEATURE_ID}}-1` - <behavior in one line>

@@ -67,8 +67,11 @@ def main():
         seen = set()
         for entry in entries:
             entry_id = entry.get("id", "?")
+            priority = entry.get("priority")
             path = os.path.join(lib.SKILL_DIR, entry.get("file", ""))
             script = os.path.join(lib.SKILL_DIR, entry.get("script", ""))
+            if priority not in ("P0", "P1", "P2", "P3"):
+                fail(errors, f"{entry_id}: priority must be P0-P3, got {priority!r}")
             if not os.path.exists(path):
                 fail(errors, f"{entry_id}: missing file {entry.get('file')}")
                 continue
@@ -78,6 +81,11 @@ def main():
             for heading in required:
                 if not re.search(rf"^## {re.escape(heading)}\s*$", body, re.M):
                     fail(errors, f"{entry_id}: missing H2 '{heading}'")
+            match = re.search(r"^\*\*Priority:\*\* (P[0-3])\b", body, re.M)
+            if not match:
+                fail(errors, f"{entry_id}: missing '**Priority:** Pn' line")
+            elif match.group(1) != priority:
+                fail(errors, f"{entry_id}: file priority {match.group(1)} != map {priority}")
             seen.add(os.path.basename(path))
         directory = os.path.join(lib.SKILL_DIR, "references", folder)
         actual = {
@@ -89,12 +97,33 @@ def main():
             fail(errors, f"{folder}/{name} is in map.json but not on disk")
         index_path = os.path.join(directory, "README.md")
         index_body = open(index_path, encoding="utf-8").read() if os.path.exists(index_path) else ""
-        for name in sorted(seen):
-            if name not in index_body:
-                fail(errors, f"{folder}/{name} is missing from {folder}/README.md")
+        for entry in entries:
+            entry_id = entry.get("id", "?")
+            if os.path.basename(entry.get("file", "")) not in index_body:
+                fail(errors, f"{entry_id}: file missing from {folder}/README.md")
+                continue
+            row = next(
+                (line for line in index_body.splitlines() if entry_id in line), ""
+            )
+            if entry.get("priority") not in row:
+                fail(errors, f"{entry_id}: priority not shown in {folder}/README.md")
+
 
     check_entries(features, FEATURE_H2, "features")
     check_entries(usecases, USECASE_H2, "usecases")
+
+    rank = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
+    feature_rank = {e["id"]: rank.get(e.get("priority"), 3) for e in features}
+    for entry in usecases:
+        ranks = [feature_rank.get(fid) for fid in entry.get("features", [])]
+        ranks = [value for value in ranks if value is not None]
+        if ranks and rank.get(entry.get("priority"), 3) > min(ranks):
+            fail(errors, f"{entry['id']}: use case is less critical than its features")
+
+    if features and not any(e.get("priority") == "P0" for e in features):
+        print("WARN no P0 feature")
+    if usecases and not any(e.get("priority") == "P0" for e in usecases):
+        print("WARN no P0 use case")
 
     for dirpath, dirnames, filenames in os.walk(lib.SKILL_DIR):
         dirnames[:] = [d for d in dirnames if d != "__pycache__"]

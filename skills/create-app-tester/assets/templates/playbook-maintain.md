@@ -29,6 +29,7 @@ Ask only about unresolved drift. Five questions maximum, each with a default. Re
 Choose per entry: keep, update, add, remove, merge.
 
 - Update when the behavior or entry point changed.
+- Re-check the priority of every touched entry. Record a priority change in the report.
 - Add when a user-facing surface has no entry.
 - Remove only with two independent signals: the entry point is gone from code, and no test, route, or doc references it.
 - Merge duplicates into one id; record the retired id in the report.
@@ -43,7 +44,7 @@ A doc-only change still needs its feature file to match the app. Prove the behav
 
 ## 6. Write
 
-Update the feature and use-case files, both indexes, the per-entry scripts, and `map.json` (`source_commit`, `generated_at`, ids). Add `assets_digest` only when the generator refreshed generic files.
+Update the feature and use-case files, both indexes, the per-entry scripts, and `map.json` (`source_commit`, `generated_at`, ids, priorities). Add `assets_digest` only when the generator refreshed generic files.
 
 ## 7. Validate
 
