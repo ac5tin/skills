@@ -6,9 +6,11 @@ import {
   RUNTIME_DIR,
   finish,
   http,
+  loadEnv,
   loadMap,
   parseArgs,
   runId as newRunId,
+  runSteps,
   sh,
   targetName,
   targets,
@@ -28,6 +30,15 @@ try {
 const config = targets(data)[target]
 const kind = config.kind || "local"
 const runConfig = kind === "local" ? config.run || {} : config
+
+let envInfo
+try {
+  envInfo = loadEnv({ name: target, run, data })
+} catch (error) {
+  finish("BLOCKED", "setup", error.message, run)
+}
+const values = envInfo.values
+const steps = config.setup_steps || []
 
 function logTail(path) {
   try {
@@ -86,15 +97,21 @@ async function versionValue(probe) {
 mkdirSync(RUNTIME_DIR, { recursive: true })
 
 if (kind === "remote") {
-  const state = { run_id: run, target, kind: "remote", pid: null, setup: "" }
+  const state = {
+    run_id: run,
+    target,
+    kind: "remote",
+    pid: null,
+    setup: "",
+    env_file: envInfo.path,
+  }
   writeState(state)
   try {
     const ready = await readyProbe(config.ready || { url: config.base_url })
+    state.steps = runSteps(steps, `setup-${target}`, run, values)
     const version = await versionValue(config.version)
-    if (version) {
-      state.version = version
-      writeState(state)
-    }
+    if (version) state.version = version
+    writeState(state)
     console.log(`READY ${ready} ${run} target=${target}`)
   } catch (error) {
     finish("BLOCKED", "setup", `target ${target}: ${error.message}`, run)
@@ -111,7 +128,7 @@ if (kind === "remote") {
     detached: true,
     stdio: ["ignore", logFd, logFd],
     env: {
-      ...process.env,
+      ...values,
       APP_TEST_RUN_ID: run,
       APP_TEST_TARGET: target,
       APP_TEST_FRESH: process.argv.includes("--fresh") ? "1" : "0",
@@ -119,16 +136,23 @@ if (kind === "remote") {
   })
   child.unref()
   closeSync(logFd)
-  const state = { run_id: run, target, kind: "local", pid: child.pid, setup, log: logPath }
+  const state = {
+    run_id: run,
+    target,
+    kind: "local",
+    pid: child.pid,
+    setup,
+    log: logPath,
+    env_file: envInfo.path,
+  }
   writeState(state)
 
   try {
     const ready = await readyProbe(runConfig.ready || {}, child)
+    state.steps = runSteps(steps, `setup-${target}`, run, values)
     const version = await versionValue(runConfig.version)
-    if (version) {
-      state.version = version
-      writeState(state)
-    }
+    if (version) state.version = version
+    writeState(state)
     console.log(`READY ${ready} ${run} target=${target}`)
   } catch (error) {
     console.error(logTail(logPath))

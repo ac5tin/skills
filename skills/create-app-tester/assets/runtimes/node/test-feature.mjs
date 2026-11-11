@@ -5,9 +5,11 @@ import {
   Skipped,
   baseUrl,
   check,
+  cleanup,
   finish,
   http,
   parseArgs,
+  requireEnv,
   requireTarget,
   requireWrite,
   runId as newRunId,
@@ -26,6 +28,7 @@ try {
   }
 
   requireTarget(ENTRY_ID, { name: args.target, run })
+  requireEnv(ENTRY_ID, { name: args.target, run })
   requireWrite(ENTRY_ID, { allowWrites: args.allowWrites, name: args.target, run })
   const BASE = baseUrl({ name: args.target, run })
 
@@ -39,8 +42,10 @@ try {
   // check(proc.status === 0, `exit ${proc.status}: ${proc.stderr}`)
   // evidence.push(save(run, ENTRY_ID, "list.txt", proc.stdout))
 
+  cleanup(ENTRY_ID, run, args.target)
   finish("PASS", ENTRY_ID, "verified", run, evidence, args.json)
 } catch (error) {
+  cleanup(ENTRY_ID, run, args.target)
   const status = error instanceof Skipped ? "SKIP" : error instanceof Blocked ? "BLOCKED" : "FAIL"
   finish(status, ENTRY_ID, error.message, run, evidence, args.json)
 }

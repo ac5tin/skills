@@ -32,9 +32,22 @@ def stack_patterns(root):
 
 
 def main():
-    if len(sys.argv) != 2:
-        sys.exit("usage: gitignore.py <repo-root>")
-    root = os.path.abspath(sys.argv[1])
+    args = sys.argv[1:]
+    extras = []
+    positional = []
+    index = 0
+    while index < len(args):
+        if args[index] == "--extra":
+            if index + 1 >= len(args):
+                sys.exit("--extra needs a path")
+            extras.append(args[index + 1])
+            index += 2
+            continue
+        positional.append(args[index])
+        index += 1
+    if len(positional) != 1:
+        sys.exit("usage: gitignore.py <repo-root> [--extra <path>]...")
+    root = os.path.abspath(positional[0])
     if not os.path.isdir(root):
         sys.exit(f"not a directory: {root}")
     if not os.path.isdir(os.path.join(root, ".git")):
@@ -62,8 +75,8 @@ def main():
         (block if inside else kept).append(line)
 
     outside = {line.strip() for line in kept}
-    patterns = BASE + stack_patterns(root)
-    desired = [pattern for pattern in patterns if pattern not in outside]
+    patterns = BASE + stack_patterns(root) + [path for path in extras if path]
+    desired = [pattern for pattern in dict.fromkeys(patterns) if pattern not in outside]
     current = [line.strip() for line in block if line.strip()]
 
     if current == desired:

@@ -88,6 +88,15 @@ A target is one place the app runs. Record every environment the repo already ha
 - One target per run. Never mix targets in one run.
 - Record auth env var names per target, never values.
 
+### 3.2 Environment files
+
+- One file per target, default `.app-tester/env/<target>.env`. It is gitignored by the managed block.
+- A root `dev.env` is allowed only when the managed block covers it. Pass it to `gitignore` as `--extra`.
+- The file is created by a human, mode `600`. The tester never writes it.
+- Record variable names, never values. The same name resolves differently per target: `APP_USERNAME` is the dev account on `dev`.
+- Record any setup step: login, seed, a consent click, a migration. A UI step needs a driver the repo already has.
+- Record any teardown step: logout, delete the records the run created.
+
 ## 4. Safe environment
 
 - Disposable data directory, database, or container for `local`.
@@ -105,12 +114,13 @@ Batch these in one message. Every question has a default, so a silent agent stil
 |---|---|---|
 | 1 | Which surface is primary, and which are secondary? | The surface with the most entry points |
 | 2 | Which targets are safe to test, and which are read-only? | `local` only, `writes: allowed` |
-| 3 | Which env vars hold test credentials, per target? | None; auth features become `BLOCKED` |
+| 3 | Which env file holds the values per target, and which names does it hold? | `.app-tester/env/<target>.env`; no names; auth features become `BLOCKED` |
 | 4 | Which external services may be stubbed? | None; live-call steps are skipped and reported |
 | 5 | Which features are out of scope? | Payments, email, anything irreversible |
 | 6 | What observable state proves a journey passed? | The app's success state plus a read-back |
 | 7 | Which destructive flows need explicit opt-in? | All deletes and sends |
 | 8 | Wall-clock budget per run? | 10 minutes |
+| 9 | Which setup or teardown steps does a target need? | None |
 
 Ask nothing the code answers. One interview, not a conversation.
 
@@ -120,6 +130,8 @@ Write `references/environment.md` with these sections:
 
 - Run: commands, ports, readiness.
 - Targets: name, kind, URL, writes, auth env var names.
+- Environment files: target, path, variable names, permissions.
+- Steps: setup and teardown per target.
 - Credentials: env var names, never values.
 - Isolation: data dirs, containers, ports, teardown.
 - Limits: blocked surfaces, missing drivers, external services.

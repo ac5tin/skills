@@ -1,9 +1,10 @@
-import { existsSync } from "node:fs"
+import { existsSync, statSync } from "node:fs"
 import net from "node:net"
-import { join } from "node:path"
+import { isAbsolute, join } from "node:path"
 import {
   REPO_ROOT,
   http,
+  loadEnv,
   loadMap,
   parseArgs,
   readState,
@@ -75,6 +76,28 @@ async function readVersion(probe) {
   }
 }
 
+function envCheck(config, target) {
+  const raw = config.env_file || join(".app-tester", "env", `${target}.env`)
+  const path = isAbsolute(raw) ? raw : join(REPO_ROOT, raw)
+  const required = config.required_env || config.auth || []
+  const info = { file: raw, exists: existsSync(path), missing: [], permissions: "ok" }
+  let values = {}
+  if (info.exists) {
+    try {
+      values = loadEnv({ name: target }).values
+    } catch (error) {
+      info.error = error.message
+      info.permissions = "unknown"
+      return [false, info]
+    }
+    if (statSync(path).mode & 0o077) {
+      info.permissions = "bad"
+      info.fix = `chmod 600 ${raw}`
+    }
+  }
+  info.missing = required.filter((key) => !values[key])
+  return [info.missing.length === 0 && info.permissions === "ok", info]
+}
 const data = loadMap()
 const state = readState()
 let target
@@ -105,6 +128,10 @@ if (version) {
   results.push({ check: "version", ok: passed, detail })
 }
 
+const [envOk, envInfo] = envCheck(config, target)
+ok = ok && envOk
+results.push({ check: "env", ok: envOk, detail: envInfo })
+
 if (checks.length === 0 && !version && state.pid) {
   let passed = false
   try {
@@ -117,7 +144,7 @@ if (checks.length === 0 && !version && state.pid) {
   results.push({ check: "pid", ok: passed, detail: `pid ${state.pid} ${passed ? "alive" : "gone"}` })
 }
 
-if (checks.length === 0 && !version && !state.pid) {
+if (checks.length === 0 && !version && !state.pid && !envInfo.exists) {
   results.push({ check: "none", ok: true, detail: "no health checks configured" })
 }
 

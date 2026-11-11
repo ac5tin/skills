@@ -6,6 +6,8 @@
 
 {{TARGETS_SECTION}}
 
+{{ENVIRONMENT_SECTION}}
+
 ## Sub-features
 
 - `{{FEATURE_ID}}-1` - <behavior in one line>

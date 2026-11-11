@@ -1,6 +1,7 @@
 """Shared helpers for the generated app tester. Standard library only."""
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -108,6 +109,140 @@ def require_write(entry_id, allow_writes=False, name=None, run=None):
     )
 
 
+_ENV_CACHE = {}
+_SECRETS = set()
+
+
+def env_path(name=None, run=None, data=None):
+    data = data or load_map()
+    target = target_name(name, run, data)
+    cfg = targets(data)[target]
+    raw = cfg.get("env_file") or os.path.join(".app-tester", "env", f"{target}.env")
+    path = raw if os.path.isabs(raw) else os.path.join(REPO_ROOT, raw)
+    return target, raw, os.path.abspath(path)
+
+
+def load_env(name=None, run=None, data=None):
+    """Merge the target env file over the process environment. The file wins."""
+    data = data or load_map()
+    target, raw, path = env_path(name, run, data)
+    if target in _ENV_CACHE:
+        return _ENV_CACHE[target]
+
+    values = dict(os.environ)
+    secrets = {}
+    exists = os.path.exists(path)
+    if exists:
+        with open(path, encoding="utf-8") as handle:
+            for number, line in enumerate(handle, 1):
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if line.startswith("export "):
+                    line = line[len("export "):].lstrip()
+                if "=" not in line:
+                    raise Blocked(f"{raw} line {number}: expected KEY=value")
+                key, value = line.split("=", 1)
+                key = key.strip()
+                if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+                    raise Blocked(f"{raw} line {number}: bad variable name")
+                value = value.strip()
+                if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+                    value = value[1:-1]
+                values[key] = value
+                secrets[key] = value
+
+    _SECRETS.update(value for value in secrets.values() if len(value) > 3)
+    info = {
+        "target": target,
+        "path": raw,
+        "abs": path,
+        "exists": exists,
+        "values": values,
+        "secrets": secrets,
+    }
+    _ENV_CACHE[target] = info
+    return info
+
+
+def env(name, default=None, run=None):
+    return load_env(None, run)["values"].get(name, default)
+
+
+def redact(text):
+    if not isinstance(text, str):
+        return text
+    for value in sorted(_SECRETS, key=len, reverse=True):
+        text = text.replace(value, "***")
+    return text
+
+
+def require_env(entry_id, name=None, run=None):
+    data = load_map()
+    info = load_env(name, run, data)
+    cfg = targets(data)[info["target"]]
+    required = list(cfg.get("required_env") or cfg.get("auth") or [])
+    required += list(find_entry(entry_id, data).get("requires_env") or [])
+    missing = [item for item in dict.fromkeys(required) if not info["values"].get(item)]
+    if missing:
+        raise Blocked(
+            f"{entry_id}: missing env {', '.join(missing)} (file {info['path']})"
+        )
+
+
+def run_steps(steps, label, run, values=None):
+    """Run shell steps in order. Output is redacted before it reaches disk."""
+    if not steps:
+        return []
+    log_dir = os.path.join(RUNTIME_DIR, "logs", run)
+    os.makedirs(log_dir, exist_ok=True)
+    results = []
+    for index, step in enumerate(steps, 1):
+        path = os.path.join(log_dir, f"{index:02d}-{label}.log")
+        try:
+            proc = subprocess.run(
+                step,
+                shell=True,
+                cwd=REPO_ROOT,
+                text=True,
+                capture_output=True,
+                timeout=120,
+                env=values,
+            )
+        except subprocess.TimeoutExpired:
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(redact(f"$ {step}\ntimeout after 120s\n"))
+            raise Blocked(f"{label} step {index} timed out after 120s")
+        body = f"$ {step}\n{proc.stdout}\n{proc.stderr}\nexit={proc.returncode}\n"
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(redact(body))
+        results.append(
+            {
+                "step": step,
+                "exit": proc.returncode,
+                "log": os.path.relpath(path, REPO_ROOT),
+            }
+        )
+        if proc.returncode != 0:
+            raise Blocked(
+                f"{label} step {index} failed (exit {proc.returncode}): "
+                f"{redact(proc.stderr)[-500:]}"
+            )
+    return results
+
+
+def cleanup(entry_id, run, name=None):
+    steps = find_entry(entry_id).get("cleanup_steps") or []
+    if not steps:
+        return
+    try:
+        run_steps(
+            steps, f"cleanup-{entry_id}", run, load_env(name, run)["values"]
+        )
+    except Blocked as err:
+        print(f"CLEANUP FAILED {entry_id} {err}")
+
+
 def run_id():
     return os.environ.get("APP_TEST_RUN_ID") or time.strftime("%Y%m%d-%H%M%S")
 
@@ -120,6 +255,8 @@ def entry_dir(run, entry_id):
 
 def save(run, entry_id, name, text):
     path = os.path.join(entry_dir(run, entry_id), name)
+    if isinstance(text, str):
+        text = redact(text)
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
     return path
@@ -186,6 +323,7 @@ def write_state(state):
 
 
 def finish(status, entry_id, reason="", run=None, evidence=None, as_json=False):
+    reason = redact(reason)
     result = {
         "id": entry_id,
         "status": status,

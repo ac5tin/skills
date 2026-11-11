@@ -19,9 +19,24 @@ const STACKS = [
   ["pubspec.yaml", [".dart_tool/", "build/"]],
 ]
 
-const root = process.argv[2]
-if (!root) {
-  console.error("usage: gitignore.mjs <repo-root>")
+const argv = process.argv.slice(2)
+const extras = []
+const positional = []
+for (let i = 0; i < argv.length; i += 1) {
+  if (argv[i] === "--extra") {
+    if (i + 1 >= argv.length) {
+      console.error("--extra needs a path")
+      process.exit(1)
+    }
+    extras.push(argv[i + 1])
+    i += 1
+  } else {
+    positional.push(argv[i])
+  }
+}
+const root = positional[0]
+if (!root || positional.length !== 1) {
+  console.error("usage: gitignore.mjs <repo-root> [--extra <path>]...")
   process.exit(1)
 }
 const project = resolve(root)
@@ -61,7 +76,9 @@ for (const line of lines) {
 }
 
 const outside = new Set(kept.map((line) => line.trim()))
-const desired = [...BASE, ...stack].filter((pattern) => !outside.has(pattern))
+const desired = [...new Set([...BASE, ...stack, ...extras.filter(Boolean)])].filter(
+  (pattern) => !outside.has(pattern),
+)
 const current = block.map((line) => line.trim()).filter(Boolean)
 
 if (JSON.stringify(current) === JSON.stringify(desired)) {

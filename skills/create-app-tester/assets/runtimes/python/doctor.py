@@ -53,6 +53,28 @@ def read_version(probe):
     return status == expect, f"{probe['url']} -> {status} version={value} (expected {expect})"
 
 
+def env_check(cfg, target):
+    raw = cfg.get("env_file") or os.path.join(".app-tester", "env", f"{target}.env")
+    path = raw if os.path.isabs(raw) else os.path.join(lib.REPO_ROOT, raw)
+    required = list(cfg.get("required_env") or cfg.get("auth") or [])
+    info = {"file": raw, "exists": os.path.exists(path), "missing": [], "permissions": "ok"}
+    if info["exists"]:
+        try:
+            values = lib.load_env(target)["values"]
+        except lib.Blocked as err:
+            info["error"] = str(err)
+            info["permissions"] = "unknown"
+            return False, info
+        if os.stat(path).st_mode & 0o077:
+            info["permissions"] = "bad"
+            info["fix"] = f"chmod 600 {raw}"
+    else:
+        values = {}
+    info["missing"] = [name for name in required if not values.get(name)]
+    ok = not info["missing"] and info["permissions"] == "ok"
+    return ok, info
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", default=None)
@@ -95,7 +117,11 @@ def main():
         ok = passed
         results.append({"check": "pid", "ok": passed, "detail": detail})
 
-    if not checks and not version and not state.get("pid"):
+    env_ok, env_info = env_check(cfg, target)
+    ok = ok and env_ok
+    results.append({"check": "env", "ok": env_ok, "detail": env_info})
+
+    if not checks and not version and not state.get("pid") and not env_info["exists"]:
         results.append({"check": "none", "ok": True, "detail": "no health checks configured"})
 
     print(json.dumps({"ok": ok, "target": target, "checks": results}))

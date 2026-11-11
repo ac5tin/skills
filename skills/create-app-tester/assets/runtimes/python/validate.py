@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import shlex
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -29,6 +30,19 @@ USECASE_H2 = [
 
 def fail(errors, message):
     errors.append(message)
+
+
+def git_ignored(path):
+    """True, False, or None when the repo cannot be checked."""
+    if not os.path.isdir(os.path.join(lib.REPO_ROOT, ".git")):
+        return None
+    rel = os.path.relpath(path, lib.REPO_ROOT)
+    proc = lib.sh(f"git check-ignore -q -- {shlex.quote(rel)}")
+    if proc.returncode == 0:
+        return True
+    if proc.returncode == 1:
+        return False
+    return None
 
 
 def main():
@@ -79,8 +93,31 @@ def main():
             fail(errors, f"target '{name}': remote target needs base_url")
         if cfg.get("writes") not in (None, "allowed", "read-only"):
             fail(errors, f"target '{name}': writes must be allowed or read-only")
-        if not isinstance(cfg.get("auth", []), list):
-            fail(errors, f"target '{name}': auth must be a list of env var names")
+        env_file = cfg.get("env_file")
+        if env_file is not None:
+            if not isinstance(env_file, str) or not env_file.strip():
+                fail(errors, f"target '{name}': env_file must be a path")
+            else:
+                absolute = (
+                    env_file
+                    if os.path.isabs(env_file)
+                    else os.path.abspath(os.path.join(lib.REPO_ROOT, env_file))
+                )
+                try:
+                    inside = os.path.commonpath([absolute, lib.SKILL_DIR]) == lib.SKILL_DIR
+                except ValueError:
+                    inside = False
+                if inside:
+                    fail(errors, f"target '{name}': env_file must be outside the skill directory")
+                if git_ignored(absolute) is False:
+                    fail(errors, f"target '{name}': env_file '{env_file}' is not gitignored")
+        for field in ("auth", "required_env", "setup_steps", "teardown_steps"):
+            value = cfg.get(field)
+            if value is not None and (
+                not isinstance(value, list)
+                or not all(isinstance(item, str) and item.strip() for item in value)
+            ):
+                fail(errors, f"target '{name}': {field} must be a list of non-empty strings")
     default_target = data.get("default_target")
     if default_target and default_target not in declared:
         fail(errors, f"default_target '{default_target}' is not a declared target")
@@ -110,6 +147,13 @@ def main():
                             fail(errors, f"{entry_id}: unknown target '{target_name}'")
             if "mutates" in entry and not isinstance(entry["mutates"], bool):
                 fail(errors, f"{entry_id}: mutates must be true or false")
+            for field in ("requires_env", "cleanup_steps"):
+                value = entry.get(field)
+                if value is not None and (
+                    not isinstance(value, list)
+                    or not all(isinstance(item, str) and item.strip() for item in value)
+                ):
+                    fail(errors, f"{entry_id}: {field} must be a list of non-empty strings")
             if not os.path.exists(path):
                 fail(errors, f"{entry_id}: missing file {entry.get('file')}")
                 continue

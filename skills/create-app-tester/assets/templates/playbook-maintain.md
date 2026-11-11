@@ -28,6 +28,8 @@ Ask only about unresolved drift. Five questions maximum, each with a default. Re
 
 If the repo gained a deploy stage or a preview URL, ask whether it becomes a target and whether it is `read-only`.
 
+If the repo gained a login step, a seed command, or a new environment variable, ask whether it becomes a `setup_steps` entry or a `required_env` name. Never ask for a value; ask for the file that holds it.
+
 ## 4. Reconcile
 
 Choose per entry: keep, update, add, remove, merge.
@@ -48,7 +50,7 @@ A doc-only change still needs its feature file to match the app. Prove the behav
 
 ## 6. Write
 
-Update the feature and use-case files, both indexes, the per-entry scripts, and `map.json` (`source_commit`, `generated_at`, ids, priorities, `targets`). Keep `default_target` and every existing target unless the repo changed. Add an entry's `targets` list only when it truly runs on a subset; a restricted entry gets a `## Targets` section. Add `assets_digest` only when the generator refreshed generic files. Ensure the managed `.gitignore` block holds `.app-tester/`, `__pycache__/`, and `*.pyc`; repair it if missing, and leave other lines alone.
+Update the feature and use-case files, both indexes, the per-entry scripts, and `map.json` (`source_commit`, `generated_at`, ids, priorities, `targets`, `env_file`, `required_env`, `setup_steps`, `teardown_steps`, `requires_env`, `cleanup_steps`). Keep `default_target` and every existing target unless the repo changed. Add an entry's `targets` list only when it truly runs on a subset; a restricted entry gets a `## Targets` section. Add `assets_digest` only when the generator refreshed generic files. Ensure the managed `.gitignore` block holds `.app-tester/`, `__pycache__/`, and `*.pyc`; repair it if missing, and leave other lines alone.
 
 ## 7. Validate
 
@@ -58,8 +60,10 @@ Run `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/validate.{{EXT}}`. Fix ev
 
 State one outcome: `clean`, `changed`, or `blocked`.
 
-- `changed`: list added, updated, removed, merged, and renamed ids, with evidence paths.
+- `changed`: list added, updated, removed, merged, and renamed ids, with evidence paths. List variables and steps added or removed, by name only.
 - `blocked`: name the missing prerequisite and the attempted route.
+
+Never write a secret value into the report, a file, or a command.
 
 ## Rules
 

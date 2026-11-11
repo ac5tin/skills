@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs"
-import { basename, join, relative } from "node:path"
-import { SKILL_DIR, loadMap } from "./lib.mjs"
+import { basename, isAbsolute, join, relative, resolve, sep } from "node:path"
+import { REPO_ROOT, SKILL_DIR, loadMap, sh } from "./lib.mjs"
 
 const FEATURE_H2 = [
   "Sub-features",
@@ -27,6 +27,18 @@ function fail(message) {
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function shellQuote(value) {
+  return `'${value.replace(/'/g, "'\\''")}'`
+}
+
+function gitIgnored(path) {
+  if (!existsSync(join(REPO_ROOT, ".git"))) return null
+  const proc = sh(`git check-ignore -q -- ${shellQuote(relative(REPO_ROOT, path))}`)
+  if (proc.status === 0) return true
+  if (proc.status === 1) return false
+  return null
 }
 
 const skillName = basename(SKILL_DIR)
@@ -77,8 +89,29 @@ for (const [name, config] of Object.entries(declared)) {
   if (config.writes !== undefined && !["allowed", "read-only"].includes(config.writes)) {
     fail(`target '${name}': writes must be allowed or read-only`)
   }
-  if (config.auth !== undefined && !Array.isArray(config.auth)) {
-    fail(`target '${name}': auth must be a list of env var names`)
+  if (config.env_file !== undefined) {
+    if (typeof config.env_file !== "string" || !config.env_file.trim()) {
+      fail(`target '${name}': env_file must be a path`)
+    } else {
+      const absolute = isAbsolute(config.env_file)
+        ? config.env_file
+        : resolve(REPO_ROOT, config.env_file)
+      if (absolute === SKILL_DIR || absolute.startsWith(SKILL_DIR + sep)) {
+        fail(`target '${name}': env_file must be outside the skill directory`)
+      }
+      if (gitIgnored(absolute) === false) {
+        fail(`target '${name}': env_file '${config.env_file}' is not gitignored`)
+      }
+    }
+  }
+  for (const field of ["auth", "required_env", "setup_steps", "teardown_steps"]) {
+    const value = config[field]
+    if (
+      value !== undefined &&
+      (!Array.isArray(value) || !value.every((item) => typeof item === "string" && item.trim()))
+    ) {
+      fail(`target '${name}': ${field} must be a list of non-empty strings`)
+    }
   }
 }
 if (data.default_target && !(data.default_target in declared)) {
@@ -113,6 +146,15 @@ function checkEntries(entries, required, folder) {
     }
     if (entry.mutates !== undefined && typeof entry.mutates !== "boolean") {
       fail(`${id}: mutates must be true or false`)
+    }
+    for (const field of ["requires_env", "cleanup_steps"]) {
+      const value = entry[field]
+      if (
+        value !== undefined &&
+        (!Array.isArray(value) || !value.every((item) => typeof item === "string" && item.trim()))
+      ) {
+        fail(`${id}: ${field} must be a list of non-empty strings`)
+      }
     }
     if (!existsSync(filePath)) {
       fail(`${id}: missing file ${entry.file}`)

@@ -45,7 +45,7 @@ Gate: the app must start and reach a usable state. A missing local asset may be 
 
 ## Phase 2 - Interview
 
-Ask the invoking agent only what the code cannot answer. One message, all questions, every question with a default. Use the bank in `references/discovery.md`. Record answers in `references/environment.md` as `Source: code | answered | assumed`. The target question is required: which targets exist, and which are read-only. Default `local` only.
+Ask the invoking agent only what the code cannot answer. One message, all questions, every question with a default. Use the bank in `references/discovery.md`. Record answers in `references/environment.md` as `Source: code | answered | assumed`. The target question is required: which targets exist, which are read-only, which env file holds each target's values, which names it holds, and which setup or teardown steps a target needs. Default `local` only, `.app-tester/env/<target>.env`, no steps.
 
 Gate: every answer is recorded or defaulted. Never ask again in a later phase.
 
@@ -62,9 +62,9 @@ Write `.agents/skills/<name>/`:
 1. Copy `assets/templates/SKILL.md`, `feature.md`, `usecase.md`, `features-README.md`, `usecases-README.md`, `playbook-test.md`, `playbook-maintain.md`, `environment.md`. Replace every `{{TOKEN}}`, including `{{RUNTIME}}` and `{{EXT}}`.
 2. Copy every file from `assets/runtimes/<runtime>/` into `scripts/`, except `test-feature.<ext>`.
 3. Write `scripts/test-<slug>.<ext>` per feature and `scripts/test-uc-<slug>.<ext>` per use case from `assets/runtimes/<runtime>/test-feature.<ext>`. Put real commands, selectors, and assertions in each.
-4. Write `references/map.json` with `runtime`, `default_target`, `targets`, every id, file, script, entry `targets` and `mutates` when they apply, run command, and `assets_digest`. A restricted entry gets a `## Targets` section in its file.
-5. Run `<runtime> .agents/skills/<name>/scripts/validate.<ext>`. Fix every failure.
-6. Run `<runtime> <this-skill>/scripts/gitignore.<ext> <repo-root>`. It adds or refreshes a managed block: tester patterns plus stack patterns detected from manifests (`node_modules/` for `package.json`, `target/` for `Cargo.toml`, and so on). It preserves every other line. Report what it added.
+4. Write `references/map.json` with `runtime`, `default_target`, `targets`, every id, file, script, entry `targets` and `mutates` when they apply, and per-target `env_file`, `required_env`, `setup_steps`, and `teardown_steps` when they apply. A restricted entry gets a `## Targets` section. Never write a value, only names and paths.
+5. Run `<runtime> <this-skill>/scripts/gitignore.<ext> <repo-root>`. It adds or refreshes a managed block: tester patterns plus stack patterns detected from manifests (`node_modules/` for `package.json`, `target/` for `Cargo.toml`, and so on). Pass `--extra <path>` for every env file outside `.app-tester/`. It preserves every other line. Report what it added.
+6. Run `<runtime> .agents/skills/<name>/scripts/validate.<ext>`. Fix every failure.
 
 No `{{` may remain. No placeholder prose.
 
@@ -81,6 +81,8 @@ Run the generated skill once, end to end, against the default target:
 
 For a `remote` target, prove the reachable part only: `setup --target <name>`, `doctor --target <name>`, one read-only entry, `teardown --target <name>`. Never write to it during the proof. Mark an untested write path as a limit, not a pass.
 
+When a target declares `required_env`, run `doctor` once without the env file. It must exit non-zero, name each missing variable, and print no value. Then create the file with dummy values in `.app-tester/env/`, mode `600`, and run the proof. Delete the dummy file afterwards only if you created it.
+
 Fix the generated skill until this passes. A generated tester that was never executed is a draft. If a real product bug blocks the run, report it and hand over a draft, clearly labeled.
 
 ## Phase 6 - Handoff
@@ -89,6 +91,7 @@ Print:
 
 - The skill name and both indexes.
 - The targets it can drive, and which are read-only.
+- The env file each target needs, and the `chmod 600` command. Never a value.
 - Three examples: `/name all`, `/name test <id>`, `/name all --target <name>`.
 - Known limits: blocked auth, missing browser harness, external services.
 - The update command: `/create-app-tester --update`.
@@ -102,6 +105,9 @@ Stop and report when: no write access; the app cannot start; no safe isolated en
 - Never point a test at production data. Production targets are read-only; a write there is a bug in the tester.
 - Never start or kill a process for a `remote` target.
 - Never write a credential into the skill. Use env var names.
+- Never create, edit, or delete an env file. A human creates it with mode `600`.
+- Never print, copy, or echo a value from an env file. Report the variable name.
+- Never add a value to `map.json`, `environment.md`, a command line, or evidence.
 - Never weaken an assertion to make a run pass.
 - Never edit product code to make a test pass. Report the bug.
 - Never delete a map without archiving it first.

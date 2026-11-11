@@ -1,10 +1,12 @@
 import { unlinkSync } from "node:fs"
 import {
   STATE_FILE,
+  loadEnv,
   loadMap,
   parseArgs,
   readState,
   runId as newRunId,
+  runSteps,
   sh,
   targetName,
   targets,
@@ -31,6 +33,23 @@ if (state.target && state.target !== target) {
   process.exit(0)
 }
 
+const config = targets(data)[target]
+let values = process.env
+try {
+  values = loadEnv({ name: target, run, data }).values
+} catch (error) {
+  console.error(`TEARDOWN env: ${error.message}`)
+}
+
+const steps = config.teardown_steps || []
+if (steps.length) {
+  try {
+    runSteps(steps, `teardown-${target}`, run, values)
+  } catch (error) {
+    console.error(`TEARDOWN step failed: ${error.message}`)
+  }
+}
+
 let stopped = false
 
 if (state.pid) {
@@ -55,7 +74,6 @@ if (state.pid) {
   }
 }
 
-const config = targets(data)[target]
 const teardown =
   (config.kind || "local") === "local"
     ? (config.run?.teardown || config.teardown || "").trim()

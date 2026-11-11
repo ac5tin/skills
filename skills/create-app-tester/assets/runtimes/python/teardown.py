@@ -57,6 +57,19 @@ def main():
         return
 
     cfg = lib.targets(data)[target]
+    try:
+        values = lib.load_env(target, run, data)["values"]
+    except lib.Blocked as err:
+        values = None
+        print(f"TEARDOWN env: {err}", file=sys.stderr)
+
+    steps = cfg.get("teardown_steps") or []
+    if steps:
+        try:
+            lib.run_steps(steps, f"teardown-{target}", run, values)
+        except lib.Blocked as err:
+            print(f"TEARDOWN step failed: {err}", file=sys.stderr)
+
     pid = state.get("pid")
     stopped = stop_group(pid) if pid else False
 

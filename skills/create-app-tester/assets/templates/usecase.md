@@ -6,6 +6,8 @@
 
 {{TARGETS_SECTION}}
 
+{{ENVIRONMENT_SECTION}}
+
 ## Features involved
 
 - [<feature name>](../features/<feature-file>.md)

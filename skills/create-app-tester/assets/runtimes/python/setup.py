@@ -71,17 +71,35 @@ def main():
     run_cfg = cfg.get("run", {}) if kind == "local" else cfg
     os.makedirs(lib.RUNTIME_DIR, exist_ok=True)
 
+    try:
+        env_info = lib.load_env(target, run, data)
+    except lib.Blocked as err:
+        lib.finish("BLOCKED", "setup", str(err), run)
+    values = dict(env_info["values"])
+    steps = cfg.get("setup_steps") or []
+
     if kind == "remote":
-        state = {"run_id": run, "target": target, "kind": "remote", "pid": None, "setup": ""}
+        state = {
+            "run_id": run,
+            "target": target,
+            "kind": "remote",
+            "pid": None,
+            "setup": "",
+            "env_file": env_info["path"],
+        }
         lib.write_state(state)
         try:
             ready = ready_probe(cfg.get("ready") or {"url": cfg.get("base_url")})
         except Exception as err:  # noqa: BLE001 - reported to the caller
             lib.finish("BLOCKED", "setup", f"target {target}: {err}", run)
+        try:
+            state["steps"] = lib.run_steps(steps, f"setup-{target}", run, values)
+        except lib.Blocked as err:
+            lib.finish("BLOCKED", "setup", str(err), run)
         version = version_value(cfg.get("version"))
         if version:
             state["version"] = version
-            lib.write_state(state)
+        lib.write_state(state)
         print(f"READY {ready} {run} target={target}")
         return
 
@@ -90,7 +108,7 @@ def main():
         lib.finish("BLOCKED", "setup", "map.json run.setup is empty", run)
 
     log_path = os.path.join(lib.RUNTIME_DIR, f"setup-{run}.log")
-    env = dict(os.environ)
+    env = dict(values)
     env["APP_TEST_RUN_ID"] = run
     env["APP_TEST_FRESH"] = "1" if args.fresh else "0"
     env["APP_TEST_TARGET"] = target
@@ -113,6 +131,7 @@ def main():
         "pid": proc.pid,
         "setup": setup,
         "log": log_path,
+        "env_file": env_info["path"],
     }
     lib.write_state(state)
 
@@ -132,10 +151,19 @@ def main():
             pass
         lib.finish("BLOCKED", "setup", str(err), run)
 
+    try:
+        state["steps"] = lib.run_steps(steps, f"setup-{target}", run, values)
+    except lib.Blocked as err:
+        try:
+            os.killpg(os.getpgid(proc.pid), 15)
+        except OSError:
+            pass
+        lib.finish("BLOCKED", "setup", str(err), run)
+
     version = version_value(run_cfg.get("version"))
     if version:
         state["version"] = version
-        lib.write_state(state)
+    lib.write_state(state)
 
     print(f"READY {ready} {run} target={target}")
 

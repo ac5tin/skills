@@ -26,6 +26,7 @@ def main():
             raise lib.Blocked("template not filled in: replace ENTRY_ID and the steps")
 
         lib.require_target(ENTRY_ID, args.target, run)
+        lib.require_env(ENTRY_ID, args.target, run)
         lib.require_write(ENTRY_ID, args.allow_writes, args.target, run)
         base = lib.base_url(args.target, run)
 
@@ -46,6 +47,8 @@ def main():
         lib.finish("BLOCKED", ENTRY_ID, str(err), run, evidence, args.json)
     except AssertionError as err:
         lib.finish("FAIL", ENTRY_ID, str(err), run, evidence, args.json)
+    finally:
+        lib.cleanup(ENTRY_ID, run, args.target)
 
 
 if __name__ == "__main__":
