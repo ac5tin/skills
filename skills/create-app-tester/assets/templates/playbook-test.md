@@ -19,18 +19,18 @@ Drive the real app with its own harness. Report one status per selected entry, w
 
 ## 2. Preflight
 
-1. Run `python3 .agents/skills/{{SKILL_NAME}}/scripts/doctor.py`.
+1. Run `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/doctor.{{EXT}}`.
 2. Healthy: continue. Unhealthy: repair the state, or report `BLOCKED` with the failing check and the exact command. Never drive an instance that failed the doctor.
 
 ## 3. Run
 
-1. `python3 .agents/skills/{{SKILL_NAME}}/scripts/setup.py --run-id <run>` once.
+1. `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/setup.{{EXT}} --run-id <run>` once.
 2. For each selected id, in `map.json` order:
-   - `python3 .agents/skills/{{SKILL_NAME}}/scripts/<script> --run-id <run>`
+   - `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/<script> --run-id <run>`
    - Record status, reason, and evidence paths.
    - Continue after `FAIL` unless the user asked to stop at the first failure.
 3. Run use cases after their features, unless the use case needs a clean state.
-4. Run `teardown.py --run-id <run>` in a `finally` path, including after a failure.
+4. Run `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/teardown.{{EXT}} --run-id <run>` in a `finally` path, including after a failure.
 5. Confirm every evidence path still exists after teardown.
 
 ## 4. Report

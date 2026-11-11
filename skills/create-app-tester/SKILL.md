@@ -23,8 +23,9 @@ Read this file fully before Phase 0. Load a reference only when its phase starts
 - New name: first free `<app>-<n>-app-tester`, `n` from 1. Leave the original untouched.
 - Update: run the existing `references/playbooks/maintain.md`. Then, when `references/map.json.assets_digest` differs from this skill's asset digest, archive the generic files to `.app-tester/archive/<name>-assets-<timestamp>/` and overwrite only `SKILL.md`, `references/playbooks/*`, `lib.py`, `doctor.py`, `setup.py`, `teardown.py`, and `validate.py`. Never touch maps, `environment.md`, or `test-*.py`. Print every overwritten file.
 - Recreate: move the old tester to `.app-tester/archive/<name>-<timestamp>/`. Keep `.app-tester/artifacts/`. Never delete the old map.
+- Both modes: run `<runtime> <this-skill>/scripts/gitignore.<ext> <repo-root>` and report what changed.
 
-The asset digest is `python3 <this-skill>/scripts/digest.py <this-skill>/assets`.
+The asset digest is `<runtime> <this-skill>/scripts/digest.<ext> <this-skill>/assets`.
 
 ## Phase 0 - Preflight
 
@@ -58,12 +59,12 @@ Gate: more than 15 features without a selection means ask which subset matters a
 
 Write `.agents/skills/<name>/`:
 
-1. Copy `assets/templates/SKILL.md`, `feature.md`, `usecase.md`, `features-README.md`, `usecases-README.md`, `playbook-test.md`, `playbook-maintain.md`, `environment.md`. Replace every `{{TOKEN}}`.
-2. Copy `assets/scripts/lib.py`, `doctor.py`, `setup.py`, `teardown.py`, `validate.py` into `scripts/` unchanged.
-3. Write `scripts/test-<slug>.py` per feature and `scripts/test-uc-<slug>.py` per use case from `assets/scripts/test-feature.py`. Put real commands, selectors, and assertions in each.
-4. Write `references/map.json` with every id, file, script, run command, and `assets_digest`.
-5. Run `python3 .agents/skills/<name>/scripts/validate.py`. Fix every failure.
-6. Offer to add `.app-tester/` to `.gitignore`. Do not rewrite an existing entry.
+1. Copy `assets/templates/SKILL.md`, `feature.md`, `usecase.md`, `features-README.md`, `usecases-README.md`, `playbook-test.md`, `playbook-maintain.md`, `environment.md`. Replace every `{{TOKEN}}`, including `{{RUNTIME}}` and `{{EXT}}`.
+2. Copy every file from `assets/runtimes/<runtime>/` into `scripts/`, except `test-feature.<ext>`.
+3. Write `scripts/test-<slug>.<ext>` per feature and `scripts/test-uc-<slug>.<ext>` per use case from `assets/runtimes/<runtime>/test-feature.<ext>`. Put real commands, selectors, and assertions in each.
+4. Write `references/map.json` with `runtime`, every id, file, script, run command, and `assets_digest`.
+5. Run `<runtime> .agents/skills/<name>/scripts/validate.<ext>`. Fix every failure.
+6. Run `<runtime> <this-skill>/scripts/gitignore.<ext> <repo-root>`. It adds or refreshes a managed block: tester patterns plus stack patterns detected from manifests (`node_modules/` for `package.json`, `target/` for `Cargo.toml`, and so on). It preserves every other line. Report what it added.
 
 No `{{` may remain. No placeholder prose.
 
@@ -71,12 +72,12 @@ No `{{` may remain. No placeholder prose.
 
 Run the generated skill once, end to end:
 
-1. `python3 .agents/skills/<name>/scripts/setup.py --run-id proof`
-2. `.../doctor.py`
-3. `.../test-<one-feature>.py --run-id proof`
-4. `.../teardown.py --run-id proof`
+1. `<runtime> .agents/skills/<name>/scripts/setup.<ext> --run-id proof`
+2. `<runtime> .agents/skills/<name>/scripts/doctor.<ext>`
+3. `<runtime> .agents/skills/<name>/scripts/test-<one-feature>.<ext> --run-id proof`
+4. `<runtime> .agents/skills/<name>/scripts/teardown.<ext> --run-id proof`
 5. Confirm the evidence still exists at its named path.
-6. Run `validate.py` again.
+6. Run `validate.<ext>` again.
 
 Fix the generated skill until this passes. A generated tester that was never executed is a draft. If a real product bug blocks the run, report it and hand over a draft, clearly labeled.
 

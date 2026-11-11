@@ -27,8 +27,8 @@ Read `references/map.json` before a run. It lists every id, file, script, and en
 
 ## Rules
 
-- Run `doctor.py` before the first drive and after any failed drive.
-- One `setup.py` per run. One `teardown.py` in a `finally` path.
+- Run `doctor.{{EXT}}` before the first drive and after any failed drive.
+- One `setup.{{EXT}}` per run. One `teardown.{{EXT}}` in a `finally` path.
 - Evidence under `.app-tester/artifacts/<run-id>/` survives teardown.
 - `SKIP` and `BLOCKED` are not passes.
 - Never weaken an assertion. A product bug is a report.

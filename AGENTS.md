@@ -9,7 +9,7 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
   - `plan-drive/` — Ordered todo list from an approved plan, with the wait rule and the no-idle rule.
   - `plan-verify/` — Executable verification scripts and run order from an approved plan.
   - `code-quality/` — General clean-code best practices (KISS, DRY, simplicity).
-  - `create-app-tester/` — Generate a repo-local app tester with feature and use-case maps, scripts, and test plus maintenance playbooks.
+  - `create-app-tester/` — Generate a repo-local app tester with a native Node or Python runtime, feature and use-case maps, scripts, and test plus maintenance playbooks.
   - `golang-code/` — Go coding standards: error handling, naming, anti-patterns, pointers, function signatures, linting.
   - `go-service-scaffold/` — Scaffold a Go microservice (includes reference templates).
   - `next-steps/` — End finished tasks with clear next actions and follow-ups.

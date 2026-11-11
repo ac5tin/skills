@@ -58,6 +58,14 @@ def main():
     data = lib.load_map()
     features = data.get("features", [])
     usecases = data.get("usecases", [])
+    runtimes = {"node": ".mjs", "python3": ".py"}
+    runtime = data.get("runtime")
+    if runtime not in runtimes:
+        fail(errors, f"runtime must be node or python3, got {runtime!r}")
+    extension = runtimes.get(runtime, "")
+    for name in ("lib", "doctor", "setup", "teardown", "validate"):
+        if not os.path.exists(os.path.join(lib.SKILL_DIR, "scripts", name + extension)):
+            fail(errors, f"missing shared script scripts/{name}{extension}")
 
     ids = [entry["id"] for entry in features + usecases]
     if len(ids) != len(set(ids)):
@@ -72,6 +80,8 @@ def main():
             script = os.path.join(lib.SKILL_DIR, entry.get("script", ""))
             if priority not in ("P0", "P1", "P2", "P3"):
                 fail(errors, f"{entry_id}: priority must be P0-P3, got {priority!r}")
+            if extension and not entry.get("script", "").endswith(extension):
+                fail(errors, f"{entry_id}: script must end with {extension} for runtime {runtime}")
             if not os.path.exists(path):
                 fail(errors, f"{entry_id}: missing file {entry.get('file')}")
                 continue

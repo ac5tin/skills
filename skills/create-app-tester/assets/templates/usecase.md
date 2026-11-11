@@ -11,13 +11,13 @@
 ## Preconditions
 
 - <state, data, auth>
-- `doctor.py` passes.
+- `doctor.{{EXT}}` passes.
 
 ## How to test and verify
 
 ### Step 1 - <action>
 
-Run: `python3 .agents/skills/{{SKILL_NAME}}/scripts/{{UC_SCRIPT}} --run-id "$RUN_ID"`
+Run: `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/{{UC_SCRIPT}} --run-id "$RUN_ID"`
 Expect: <exact observable result>
 
 ## Evidence

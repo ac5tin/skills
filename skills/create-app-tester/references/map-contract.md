@@ -54,7 +54,7 @@ Step shape:
 ```markdown
 ### Step 2 - Create the note
 
-Run: `python3 .agents/skills/<skill>/scripts/test-create-note.py --run-id "$RUN_ID"`
+Run: `{{RUNTIME}} .agents/skills/<skill>/scripts/test-create-note.{{EXT}} --run-id "$RUN_ID"`
 Expect: HTTP 201 and `notes.json` contains the title `Release checklist`.
 ```
 
@@ -83,7 +83,7 @@ A use case crosses two or more features and ends in a state a user can see.
 
 `validate.py` checks that every map file appears in its index.
 
-Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{FEATURE_ID}}`, `{{FEATURE_NAME}}`, `{{FEATURE_FILE}}`, `{{UC_ID}}`, `{{UC_NAME}}`, `{{UC_FILE}}`, `{{SCRIPT}}`, `{{UC_SCRIPT}}`, `{{SUMMARY}}`, `{{PRIORITY}}`, `{{PRIORITY_REASON}}`. Every token must be replaced before `validate.py` runs.
+Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{RUNTIME}}`, `{{EXT}}`, `{{FEATURE_ID}}`, `{{FEATURE_NAME}}`, `{{FEATURE_FILE}}`, `{{UC_ID}}`, `{{UC_NAME}}`, `{{UC_FILE}}`, `{{SCRIPT}}`, `{{UC_SCRIPT}}`, `{{SUMMARY}}`, `{{PRIORITY}}`, `{{PRIORITY_REASON}}`. Every token must be replaced before `validate.py` runs. `{{SCRIPT}}` and `{{UC_SCRIPT}}` include the extension.
 
 ## 5. `map.json`
 
@@ -91,6 +91,7 @@ Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{FEATURE_ID}}`
 {
   "app": "foobar",
   "skill": "foobar-app-tester",
+  "runtime": "node",
   "generated_at": "2026-11-10T00:00:00Z",
   "source_commit": "abc123",
   "assets_digest": "sha256",
@@ -115,8 +116,9 @@ Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{FEATURE_ID}}`
 
 Field rules:
 
+- `runtime`: `node` (Node 18+ and `.mjs`) or `python3` (`.py`). All scripts use that runtime and extension.
 - `source_commit`: `git rev-parse HEAD` at generation, or `null`.
-- `assets_digest`: output of `python3 <create-app-tester>/scripts/digest.py <create-app-tester>/assets`.
+- `assets_digest`: output of `<runtime> <create-app-tester>/scripts/digest.<ext> <create-app-tester>/assets`.
 - `run.setup`: shell command, run from the repo root. It may start a server; the process group is recorded.
 - `run.ready`: URL to poll, or `{"cmd": "..."}`. Omit for a short-lived CLI.
 - `run.health`: list of checks for `doctor.py`: `http`, `cmd`, `port`, `file`.
@@ -124,15 +126,16 @@ Field rules:
 
 ## 6. Scripts
 
-All scripts run as `python3 <path>`. Exit codes: `0` pass, `1` fail, `2` blocked. A script prints one status line and writes `result.json` plus evidence.
+All scripts run as `<runtime> <path>`: `node` for `.mjs`, `python3` for `.py`. Node needs version 18 or later for built-in `fetch`. Exit codes: `0` pass, `1` fail, `2` blocked. A script prints one status line and writes `result.json` plus evidence.
 
 | Script | Arguments | Behavior |
 |---|---|---|
-| `doctor.py` | none | Read-only. Runs `run.health`. Prints JSON. Exit 2 when unhealthy. |
-| `setup.py` | `--run-id`, `--fresh` | Runs `run.setup`, waits for `run.ready`, records the process group in `.app-tester/state.json`. Prints `READY <url> <run-id>`. |
-| `teardown.py` | `--run-id` | Stops the recorded process group and runs `run.teardown`. Keeps artifacts. Idempotent. |
-| `test-<slug>.py` | `--run-id`, `--json` | One feature or use case. Prints `PASS|FAIL|BLOCKED <id> <reason>`. |
-| `validate.py` | none | Checks this contract. Prints each failure. |
+| `doctor.<ext>` | none | Read-only. Runs `run.health`. Prints JSON. Exit 2 when unhealthy. |
+| `setup.<ext>` | `--run-id`, `--fresh` | Runs `run.setup`, waits for `run.ready`, records the process group in `.app-tester/state.json`. Prints `READY <url> <run-id>`. |
+| `teardown.<ext>` | `--run-id` | Stops the recorded process group and runs `run.teardown`. Keeps artifacts. Idempotent. |
+| `test-<slug>.<ext>` | `--run-id`, `--json` | One feature or use case. Prints `PASS|FAIL|BLOCKED <id> <reason>`. |
+| `validate.<ext>` | none | Checks this contract. Prints each failure. |
+| `lib.<ext>` | none | Shared helpers: paths, HTTP, shell, assertions, evidence, state. |
 
 Rules:
 
@@ -159,3 +162,42 @@ Rules:
 | `SKIP` | Out of scope or destructive without opt-in. Never counts as a pass. |
 
 A run exits non-zero when any selected entry is `FAIL`. `SKIP` and `BLOCKED` are reported by name, never hidden.
+
+## 9. Repo hygiene
+
+All tester output goes under `.app-tester/`. Never commit artifacts, reports, or state.
+
+The generator maintains one block in the repo `.gitignore`:
+
+```
+# app-tester: begin (managed)
+.app-tester/
+__pycache__/
+*.pyc
+node_modules/
+# app-tester: end (managed)
+```
+
+Base patterns: `.app-tester/`, `__pycache__/`, `*.pyc`.
+
+Stack patterns are added only when the manifest exists at the repo root:
+
+| Manifest | Added |
+|---|---|
+| `package.json` | `node_modules/`, `.next/`, `coverage/` |
+| `pyproject.toml`, `requirements.txt` | `.venv/`, `.pytest_cache/` |
+| `Cargo.toml` | `target/` |
+| `pom.xml`, `build.gradle`, `build.gradle.kts` | `target/` or `build/`, `.gradle/` |
+| `Gemfile` | `.bundle/` |
+| `composer.json` | `vendor/` |
+| `pubspec.yaml` | `.dart_tool/`, `build/` |
+
+Conservative by design: dependency and cache directories only. Build outputs that projects sometimes commit, such as `dist/`, are left to the app's own rules.
+
+Rules:
+
+- Add only missing patterns. Keep every line outside the block unchanged.
+- Rewrite the block in place on update or recreate. Never add a second block.
+- Patterns already present outside the block stay there; do not duplicate them.
+- Stacks not listed above belong to the app's own ignore rules, not this block.
+- Not a git repo: skip and report.

@@ -44,11 +44,11 @@ A doc-only change still needs its feature file to match the app. Prove the behav
 
 ## 6. Write
 
-Update the feature and use-case files, both indexes, the per-entry scripts, and `map.json` (`source_commit`, `generated_at`, ids, priorities). Add `assets_digest` only when the generator refreshed generic files.
+Update the feature and use-case files, both indexes, the per-entry scripts, and `map.json` (`source_commit`, `generated_at`, ids, priorities). Add `assets_digest` only when the generator refreshed generic files. Ensure the managed `.gitignore` block holds `.app-tester/`, `__pycache__/`, and `*.pyc`; repair it if missing, and leave other lines alone.
 
 ## 7. Validate
 
-Run `python3 .agents/skills/{{SKILL_NAME}}/scripts/validate.py`. Fix every failure.
+Run `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/validate.{{EXT}}`. Fix every failure.
 
 ## 8. Report
 

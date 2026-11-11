@@ -22,6 +22,19 @@ Normalize: strip an npm scope (`@acme/foo` becomes `foo`), lowercase, replace `_
 
 Skill name: `<app>-app-tester`. Must match `^[a-z0-9]+(-[a-z0-9]+)*$`, 64 chars maximum, no `--`. Truncate the app part to 52 chars, less when a numeric suffix is added.
 
+### 1.1 Harness runtime
+
+Pick the runtime from the repo, not from preference:
+
+| Signal | Runtime | Extension |
+|---|---|---|
+| `package.json` and `node --version` 18 or later | `node` | `.mjs` |
+| `pyproject.toml` or `requirements.txt` | `python3` | `.py` |
+| Both | The primary surface's language; ask if unclear | |
+| Neither | `node` when present, else `python3` | |
+
+Neither runtime available: stop and say which one to install. Record the choice as `runtime` in `map.json`.
+
 Monorepo: several manifests at depth 1-2 with different names means ask which package is the app. Run discovery from that directory. Write the skill at the repo root unless the user asks for a nested skill.
 
 ## 2. Surfaces

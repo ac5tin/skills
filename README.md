@@ -10,7 +10,7 @@ A collection of reusable agent skills (Markdown-based instruction sets) for AI c
 | `plan-drive` | Turn an approved plan into an ordered todo list and drive it without idling. |
 | `plan-verify` | Turn an approved plan into executable verification scripts and a run order. |
 | `code-quality` | Enforce clean, simple, maintainable code best practices. Use when planning, implementation and code reviews. |
-| `create-app-tester` | Generate a repo-local tester skill in `.agents/skills/<app>-app-tester` with priority-tagged feature and use-case maps, scripts, and test plus maintenance playbooks. Create, update, or recreate. |
+| `create-app-tester` | Generate a repo-local tester skill in `.agents/skills/<app>-app-tester` with a native Node or Python runtime, priority-tagged feature and use-case maps, scripts, and test plus maintenance playbooks. Create, update, or recreate. |
 | `go-service-scaffold` | Scaffolds new Go microservices from scratch with a production-ready layered architecture: Fiber HTTP, Bun ORM, Unit of Work, dual-interface services, domain packages, task queues, cron workers. Use when creating a new Go project, bootstrapping a Go service, or asked to scaffold a Go API. |
 | `golang-code` | Enforce good Go (Golang) code styles and best practices. Use when writing and reviewing Go code. |
 | `next-steps` | Always end a finished task with clear next actions and follow-ups. Use whenever completing a task, fix, plan, review, or any work that changes state. |
