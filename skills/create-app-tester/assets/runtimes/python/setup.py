@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Start the app for one run. Idempotent. Prints READY when usable."""
+"""Start the target for one run. Idempotent. Prints READY when usable."""
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -34,24 +35,65 @@ def ready_probe(config):
     return ""
 
 
+def version_value(probe):
+    if not probe or not probe.get("url"):
+        return None
+    try:
+        status, body = lib.http(probe.get("method", "GET"), probe["url"])
+    except Exception:  # noqa: BLE001 - version is evidence, not a gate
+        return None
+    if status >= 400:
+        return None
+    if probe.get("field"):
+        try:
+            return json.loads(body).get(probe["field"])
+        except (ValueError, AttributeError):
+            return None
+    return body.strip()[:120]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-id", default=None)
+    parser.add_argument("--target", default=None)
     parser.add_argument("--fresh", action="store_true")
     args = parser.parse_args()
 
     data = lib.load_map()
     run = args.run_id or lib.run_id()
-    config = data.get("run", {})
-    setup = config.get("setup", "").strip()
+    try:
+        target = lib.target_name(args.target, run, data)
+    except lib.Blocked as err:
+        lib.finish("BLOCKED", "setup", str(err), run)
+
+    cfg = lib.targets(data)[target]
+    kind = cfg.get("kind", "local")
+    run_cfg = cfg.get("run", {}) if kind == "local" else cfg
+    os.makedirs(lib.RUNTIME_DIR, exist_ok=True)
+
+    if kind == "remote":
+        state = {"run_id": run, "target": target, "kind": "remote", "pid": None, "setup": ""}
+        lib.write_state(state)
+        try:
+            ready = ready_probe(cfg.get("ready") or {"url": cfg.get("base_url")})
+        except Exception as err:  # noqa: BLE001 - reported to the caller
+            lib.finish("BLOCKED", "setup", f"target {target}: {err}", run)
+        version = version_value(cfg.get("version"))
+        if version:
+            state["version"] = version
+            lib.write_state(state)
+        print(f"READY {ready} {run} target={target}")
+        return
+
+    setup = run_cfg.get("setup", "").strip()
     if not setup:
         lib.finish("BLOCKED", "setup", "map.json run.setup is empty", run)
 
-    os.makedirs(lib.RUNTIME_DIR, exist_ok=True)
     log_path = os.path.join(lib.RUNTIME_DIR, f"setup-{run}.log")
     env = dict(os.environ)
     env["APP_TEST_RUN_ID"] = run
     env["APP_TEST_FRESH"] = "1" if args.fresh else "0"
+    env["APP_TEST_TARGET"] = target
 
     with open(log_path, "ab") as log:
         proc = subprocess.Popen(
@@ -64,11 +106,18 @@ def main():
             env=env,
         )
 
-    state = {"run_id": run, "pid": proc.pid, "setup": setup, "log": log_path}
+    state = {
+        "run_id": run,
+        "target": target,
+        "kind": "local",
+        "pid": proc.pid,
+        "setup": setup,
+        "log": log_path,
+    }
     lib.write_state(state)
 
     try:
-        ready = ready_probe(config.get("ready") or {})
+        ready = ready_probe(run_cfg.get("ready") or {})
     except Exception as err:  # noqa: BLE001 - reported with the log tail
         tail = ""
         try:
@@ -83,7 +132,12 @@ def main():
             pass
         lib.finish("BLOCKED", "setup", str(err), run)
 
-    print(f"READY {ready} {run}")
+    version = version_value(run_cfg.get("version"))
+    if version:
+        state["version"] = version
+        lib.write_state(state)
+
+    print(f"READY {ready} {run} target={target}")
 
 
 if __name__ == "__main__":

@@ -4,9 +4,11 @@ Incremental resync of this skill against the app. Not a rebuild; `/create-app-te
 
 ## 0. Locate the drift
 
-1. Read `references/map.json`: `source_commit`, ids, scripts.
+1. Read `references/map.json`: `source_commit`, ids, scripts, `targets`, `default_target`.
 2. `git rev-parse HEAD` and `git diff --name-status <source_commit>..HEAD`.
 3. No git: compare file mtimes and say the scan is weaker.
+
+Targets are part of the map. Check each `remote` target's `base_url` and `version` against the repo config. A target that no longer exists is reported, not silently dropped.
 
 ## 1. Index hygiene
 
@@ -23,6 +25,8 @@ Also scan changed directories for user-facing surfaces missing from the map. A m
 ## 3. Interview
 
 Ask only about unresolved drift. Five questions maximum, each with a default. Record answers in `references/environment.md`.
+
+If the repo gained a deploy stage or a preview URL, ask whether it becomes a target and whether it is `read-only`.
 
 ## 4. Reconcile
 
@@ -44,7 +48,7 @@ A doc-only change still needs its feature file to match the app. Prove the behav
 
 ## 6. Write
 
-Update the feature and use-case files, both indexes, the per-entry scripts, and `map.json` (`source_commit`, `generated_at`, ids, priorities). Add `assets_digest` only when the generator refreshed generic files. Ensure the managed `.gitignore` block holds `.app-tester/`, `__pycache__/`, and `*.pyc`; repair it if missing, and leave other lines alone.
+Update the feature and use-case files, both indexes, the per-entry scripts, and `map.json` (`source_commit`, `generated_at`, ids, priorities, `targets`). Keep `default_target` and every existing target unless the repo changed. Add an entry's `targets` list only when it truly runs on a subset; a restricted entry gets a `## Targets` section. Add `assets_digest` only when the generator refreshed generic files. Ensure the managed `.gitignore` block holds `.app-tester/`, `__pycache__/`, and `*.pyc`; repair it if missing, and leave other lines alone.
 
 ## 7. Validate
 

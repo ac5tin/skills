@@ -5,6 +5,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,9 +20,92 @@ class Blocked(Exception):
     """A precondition is missing. The entry cannot run, and did not fail."""
 
 
+class Skipped(Exception):
+    """The entry does not apply to the active target."""
+
+
 def load_map():
     with open(MAP_FILE, encoding="utf-8") as f:
         return json.load(f)
+
+
+def targets(data=None):
+    """Declared targets; an old map's top-level run block is the local target."""
+    data = data or load_map()
+    declared = data.get("targets") or {}
+    if declared:
+        return declared
+    return {"local": {"kind": "local", "run": data.get("run", {})}}
+
+
+def target_name(arg=None, run=None, data=None):
+    data = data or load_map()
+    known = targets(data)
+    state = read_state() if run else {}
+    bound = state.get("target") if run and state.get("run_id") == run else None
+    name = (
+        arg
+        or os.environ.get("APP_TEST_TARGET")
+        or bound
+        or data.get("default_target")
+        or "local"
+    )
+    if name not in known:
+        raise Blocked(f"unknown target '{name}'; known: {', '.join(sorted(known))}")
+    return name
+
+
+def target_config(name=None, run=None, data=None):
+    data = data or load_map()
+    return targets(data)[target_name(name, run, data)]
+
+
+def ready_url(cfg):
+    ready = cfg.get("ready") or (cfg.get("run") or {}).get("ready")
+    if isinstance(ready, str):
+        return ready
+    return (ready or {}).get("url")
+
+
+def base_url(name=None, run=None, data=None):
+    cfg = target_config(name, run, data)
+    url = cfg.get("base_url") or ready_url(cfg)
+    if not url:
+        raise Blocked(f"target '{target_name(name, run)}' has no base_url or ready url")
+    if cfg.get("base_url"):
+        return url.rstrip("/")
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme and parts.netloc:
+        return f"{parts.scheme}://{parts.netloc}"
+    return url.rstrip("/")
+
+
+def find_entry(entry_id, data=None):
+    data = data or load_map()
+    for entry in data.get("features", []) + data.get("usecases", []):
+        if entry.get("id") == entry_id:
+            return entry
+    return {}
+
+
+def require_target(entry_id, name=None, run=None):
+    data = load_map()
+    allowed = find_entry(entry_id, data).get("targets")
+    if allowed and target_name(name, run, data) not in allowed:
+        raise Skipped(f"not mapped to target {target_name(name, run, data)}")
+
+
+def require_write(entry_id, allow_writes=False, name=None, run=None):
+    if not find_entry(entry_id).get("mutates"):
+        return
+    cfg = target_config(name, run)
+    default = "read-only" if cfg.get("kind") == "remote" else "allowed"
+    if cfg.get("writes", default) == "allowed" or allow_writes:
+        return
+    raise Blocked(
+        f"target '{target_name(name, run)}' is read-only and {entry_id} mutates data; "
+        "pass --allow-writes"
+    )
 
 
 def run_id():
@@ -109,8 +193,17 @@ def finish(status, entry_id, reason="", run=None, evidence=None, as_json=False):
         "evidence": evidence or [],
     }
     if run:
+        state = read_state()
+        if state.get("target"):
+            result["target"] = state["target"]
+        try:
+            result["base_url"] = base_url(run=run)
+        except Blocked:
+            pass
+        if state.get("version"):
+            result["version"] = state["version"]
         save(run, entry_id, "result.json", json.dumps(result, indent=2))
     print(f"{status} {entry_id} {reason}".rstrip())
     if as_json:
         print(json.dumps(result))
-    sys.exit({"PASS": 0, "FAIL": 1, "BLOCKED": 2}[status])
+    sys.exit({"PASS": 0, "FAIL": 1, "BLOCKED": 2, "SKIP": 0}[status])

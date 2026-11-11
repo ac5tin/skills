@@ -4,6 +4,10 @@ Drive the real app with its own harness. Report one status per selected entry, w
 
 ## 1. Select
 
+Resolve the target first: `--target <name>`, else `APP_TEST_TARGET`, else `map.json.default_target`. An unknown name stops the run and lists the declared targets. One target per run.
+
+Then select entries:
+
 | Selection | Entries to run |
 |---|---|
 | `all` | Every id in `references/map.json` |
@@ -16,27 +20,31 @@ Drive the real app with its own harness. Report one status per selected entry, w
 - A priority run covers both features and use cases at that level.
 - Nothing: print both indexes with ids and priorities, then ask. Do not guess.
 - An id missing from `map.json` is an error, not a new test.
+- An entry whose `targets` list excludes the active target reports `SKIP`. Do not drop it silently.
 
 ## 2. Preflight
 
-1. Run `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/doctor.{{EXT}}`.
+1. Run `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/doctor.{{EXT}} --target <name>`.
 2. Healthy: continue. Unhealthy: repair the state, or report `BLOCKED` with the failing check and the exact command. Never drive an instance that failed the doctor.
+3. For a `remote` target, keep the `version` value from the doctor output. It goes into the report.
 
 ## 3. Run
 
-1. `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/setup.{{EXT}} --run-id <run>` once.
+1. `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/setup.{{EXT}} --run-id <run> --target <name>` once.
 2. For each selected id, in `map.json` order:
-   - `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/<script> --run-id <run>`
-   - Record status, reason, and evidence paths.
+   - `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/<script> --run-id <run> --target <name>`
+   - Record status, reason, evidence paths, and target.
    - Continue after `FAIL` unless the user asked to stop at the first failure.
 3. Run use cases after their features, unless the use case needs a clean state.
-4. Run `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/teardown.{{EXT}} --run-id <run>` in a `finally` path, including after a failure.
+4. Run `{{RUNTIME}} .agents/skills/{{SKILL_NAME}}/scripts/teardown.{{EXT}} --run-id <run> --target <name>` in a `finally` path, including after a failure.
 5. Confirm every evidence path still exists after teardown.
+
+`--allow-writes` goes on the entry script, not on setup. Use it only when the user asked for a write in the same message and the target is not production.
 
 ## 4. Report
 
-| Priority | ID | Status | Reason | Evidence |
-|---|---|---|---|---|
+| Target | Priority | ID | Status | Reason | Evidence |
+|---|---|---|---|---|---|
 
 Write `summary.md` and `summary.json` to `.app-tester/artifacts/<run>/`. Exit non-zero when any selected entry is `FAIL`.
 
@@ -54,7 +62,9 @@ Write `summary.md` and `summary.json` to `.app-tester/artifacts/<run>/`. Exit no
 
 ## 6. Isolation
 
-- One run owns its port and data directory. Refuse to drive an instance another run owns.
+- One run owns its target, port, and data directory. Refuse to drive an instance another run owns.
 - `--fresh` clears only `.app-tester/` runtime state, never user data.
 - Destructive steps require `--allow-destructive` and an explicit user request.
-- Kill only recorded process groups. Never kill by process name.
+- A `remote` target is shared with other people. Read-only is the default; a write needs `--allow-writes` and an explicit request.
+- Production is read-only. Never pass `--allow-writes` for it.
+- Kill only recorded process groups, and only for a `local` target. Never kill by process name.

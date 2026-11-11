@@ -67,6 +67,24 @@ def main():
         if not os.path.exists(os.path.join(lib.SKILL_DIR, "scripts", name + extension)):
             fail(errors, f"missing shared script scripts/{name}{extension}")
 
+    declared = data.get("targets")
+    if not declared:
+        print("WARN no targets block; run treated as local")
+        declared = {"local": {"kind": "local", "run": data.get("run", {})}}
+    for name, cfg in declared.items():
+        kind = cfg.get("kind")
+        if kind not in ("local", "remote"):
+            fail(errors, f"target '{name}': kind must be local or remote, got {kind!r}")
+        if kind == "remote" and not cfg.get("base_url"):
+            fail(errors, f"target '{name}': remote target needs base_url")
+        if cfg.get("writes") not in (None, "allowed", "read-only"):
+            fail(errors, f"target '{name}': writes must be allowed or read-only")
+        if not isinstance(cfg.get("auth", []), list):
+            fail(errors, f"target '{name}': auth must be a list of env var names")
+    default_target = data.get("default_target")
+    if default_target and default_target not in declared:
+        fail(errors, f"default_target '{default_target}' is not a declared target")
+
     ids = [entry["id"] for entry in features + usecases]
     if len(ids) != len(set(ids)):
         fail(errors, "duplicate ids in map.json")
@@ -82,6 +100,16 @@ def main():
                 fail(errors, f"{entry_id}: priority must be P0-P3, got {priority!r}")
             if extension and not entry.get("script", "").endswith(extension):
                 fail(errors, f"{entry_id}: script must end with {extension} for runtime {runtime}")
+            allowed = entry.get("targets")
+            if allowed is not None:
+                if not isinstance(allowed, list) or not allowed:
+                    fail(errors, f"{entry_id}: targets must be a non-empty list")
+                else:
+                    for target_name in allowed:
+                        if target_name not in declared:
+                            fail(errors, f"{entry_id}: unknown target '{target_name}'")
+            if "mutates" in entry and not isinstance(entry["mutates"], bool):
+                fail(errors, f"{entry_id}: mutates must be true or false")
             if not os.path.exists(path):
                 fail(errors, f"{entry_id}: missing file {entry.get('file')}")
                 continue
@@ -91,6 +119,13 @@ def main():
             for heading in required:
                 if not re.search(rf"^## {re.escape(heading)}\s*$", body, re.M):
                     fail(errors, f"{entry_id}: missing H2 '{heading}'")
+            if (
+                isinstance(allowed, list)
+                and allowed
+                and set(allowed) != set(declared)
+                and not re.search(r"^## Targets\s*$", body, re.M)
+            ):
+                fail(errors, f"{entry_id}: restricted targets need an '## Targets' section")
             match = re.search(r"^\*\*Priority:\*\* (P[0-3])\b", body, re.M)
             if not match:
                 fail(errors, f"{entry_id}: missing '**Priority:** Pn' line")

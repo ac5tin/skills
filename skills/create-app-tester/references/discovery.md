@@ -72,10 +72,26 @@ Drive with the harness that already exists, in this order:
 
 No driver for the primary surface: record it as a limit. Affected features are `BLOCKED`, not faked.
 
+### 3.1 Targets
+
+A target is one place the app runs. Record every environment the repo already has.
+
+| Signal | Target |
+|---|---|
+| README quickstart, Makefile, compose file | `local` |
+| Deploy config, `.env.example`, a CI workflow with a URL | One target per stage, named after it |
+| Hosts such as `dev.` or `staging.` in docs | `dev`, `staging` |
+
+- `local` starts from the repo and owns its processes. Every other target is `remote`: probe only, never start or kill.
+- `writes` is `allowed` only when the invoking agent says the environment is disposable. Otherwise `read-only`.
+- Production is always `read-only`.
+- One target per run. Never mix targets in one run.
+- Record auth env var names per target, never values.
+
 ## 4. Safe environment
 
-- Disposable data directory, database, or container.
-- Never production, never customer data, never a shared instance.
+- Disposable data directory, database, or container for `local`.
+- Never production writes, never customer data, never a shared database.
 - Unique port per run when the app supports it.
 - Credentials from env vars named in `environment.md`.
 - Destructive flows off by default; require `--allow-destructive`.
@@ -88,8 +104,8 @@ Batch these in one message. Every question has a default, so a silent agent stil
 | # | Question | Default |
 |---|---|---|
 | 1 | Which surface is primary, and which are secondary? | The surface with the most entry points |
-| 2 | What is the safe test environment? | Local process, disposable state |
-| 3 | Which env vars hold test credentials? | None; auth features become `BLOCKED` |
+| 2 | Which targets are safe to test, and which are read-only? | `local` only, `writes: allowed` |
+| 3 | Which env vars hold test credentials, per target? | None; auth features become `BLOCKED` |
 | 4 | Which external services may be stubbed? | None; live-call steps are skipped and reported |
 | 5 | Which features are out of scope? | Payments, email, anything irreversible |
 | 6 | What observable state proves a journey passed? | The app's success state plus a read-back |
@@ -103,6 +119,7 @@ Ask nothing the code answers. One interview, not a conversation.
 Write `references/environment.md` with these sections:
 
 - Run: commands, ports, readiness.
+- Targets: name, kind, URL, writes, auth env var names.
 - Credentials: env var names, never values.
 - Isolation: data dirs, containers, ports, teardown.
 - Limits: blocked surfaces, missing drivers, external services.

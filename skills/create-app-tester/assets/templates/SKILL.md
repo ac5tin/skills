@@ -29,6 +29,8 @@ Read `references/map.json` before a run. It lists every id, file, script, and en
 
 - Run `doctor.{{EXT}}` before the first drive and after any failed drive.
 - One `setup.{{EXT}}` per run. One `teardown.{{EXT}}` in a `finally` path.
+- One target per run. Pass `--target <name>` to every script in the run.
+- A `remote` target is never started or killed. A read-only target needs `--allow-writes` for a mutating entry.
 - Evidence under `.app-tester/artifacts/<run-id>/` survives teardown.
 - `SKIP` and `BLOCKED` are not passes.
 - Never weaken an assertion. A product bug is a report.

@@ -10,6 +10,8 @@ import {
   parseArgs,
   runId as newRunId,
   sh,
+  targetName,
+  targets,
   waitFor,
   writeState,
 } from "./lib.mjs"
@@ -17,45 +19,32 @@ import {
 const args = parseArgs()
 const run = args.runId || newRunId()
 const data = loadMap()
-const config = data.run || {}
-const setup = (config.setup || "").trim()
+let target
+try {
+  target = targetName({ arg: args.target, run, data })
+} catch (error) {
+  finish("BLOCKED", "setup", error.message, run)
+}
+const config = targets(data)[target]
+const kind = config.kind || "local"
+const runConfig = kind === "local" ? config.run || {} : config
 
-if (!setup) finish("BLOCKED", "setup", "map.json run.setup is empty", run)
-
-mkdirSync(RUNTIME_DIR, { recursive: true })
-const logPath = join(RUNTIME_DIR, `setup-${run}.log`)
-const logFd = openSync(logPath, "a")
-const child = spawn(setup, {
-  shell: true,
-  cwd: REPO_ROOT,
-  detached: true,
-  stdio: ["ignore", logFd, logFd],
-  env: {
-    ...process.env,
-    APP_TEST_RUN_ID: run,
-    APP_TEST_FRESH: process.argv.includes("--fresh") ? "1" : "0",
-  },
-})
-child.unref()
-closeSync(logFd)
-writeState({ run_id: run, pid: child.pid, setup, log: logPath })
-
-function logTail() {
+function logTail(path) {
   try {
-    return readFileSync(logPath, "utf8").split("\n").slice(-20).join("\n")
+    return readFileSync(path, "utf8").split("\n").slice(-20).join("\n")
   } catch {
     return ""
   }
 }
 
-async function readyProbe(ready) {
+async function readyProbe(ready, child = null) {
   const configReady = typeof ready === "string" ? { url: ready } : ready || {}
   const timeout = configReady.timeout || 60
   if (configReady.url) {
     const expect = configReady.expect ?? 200
     await waitFor(
       async () => {
-        if (child.exitCode !== null) throw new Error(`process exited ${child.exitCode}`)
+        if (child && child.exitCode !== null) throw new Error(`process exited ${child.exitCode}`)
         const { status } = await http("GET", configReady.url)
         return status === expect
       },
@@ -66,7 +55,7 @@ async function readyProbe(ready) {
   if (configReady.cmd) {
     await waitFor(
       async () => {
-        if (child.exitCode !== null) throw new Error(`process exited ${child.exitCode}`)
+        if (child && child.exitCode !== null) throw new Error(`process exited ${child.exitCode}`)
         return sh(configReady.cmd, { timeout }).status === 0
       },
       { timeout, label: configReady.cmd },
@@ -76,15 +65,78 @@ async function readyProbe(ready) {
   return ""
 }
 
-try {
-  const ready = await readyProbe(config.ready || {})
-  console.log(`READY ${ready} ${run}`)
-} catch (error) {
-  console.error(logTail())
+async function versionValue(probe) {
+  if (!probe || !probe.url) return null
   try {
-    process.kill(-child.pid, "SIGTERM")
+    const { status, body } = await http(probe.method || "GET", probe.url)
+    if (status >= 400) return null
+    if (probe.field) {
+      try {
+        return JSON.parse(body)[probe.field] ?? null
+      } catch {
+        return null
+      }
+    }
+    return body.trim().slice(0, 120)
   } catch {
-    // already gone
+    return null
   }
-  finish("BLOCKED", "setup", error.message, run)
+}
+
+mkdirSync(RUNTIME_DIR, { recursive: true })
+
+if (kind === "remote") {
+  const state = { run_id: run, target, kind: "remote", pid: null, setup: "" }
+  writeState(state)
+  try {
+    const ready = await readyProbe(config.ready || { url: config.base_url })
+    const version = await versionValue(config.version)
+    if (version) {
+      state.version = version
+      writeState(state)
+    }
+    console.log(`READY ${ready} ${run} target=${target}`)
+  } catch (error) {
+    finish("BLOCKED", "setup", `target ${target}: ${error.message}`, run)
+  }
+} else {
+  const setup = (runConfig.setup || "").trim()
+  if (!setup) finish("BLOCKED", "setup", "map.json run.setup is empty", run)
+
+  const logPath = join(RUNTIME_DIR, `setup-${run}.log`)
+  const logFd = openSync(logPath, "a")
+  const child = spawn(setup, {
+    shell: true,
+    cwd: REPO_ROOT,
+    detached: true,
+    stdio: ["ignore", logFd, logFd],
+    env: {
+      ...process.env,
+      APP_TEST_RUN_ID: run,
+      APP_TEST_TARGET: target,
+      APP_TEST_FRESH: process.argv.includes("--fresh") ? "1" : "0",
+    },
+  })
+  child.unref()
+  closeSync(logFd)
+  const state = { run_id: run, target, kind: "local", pid: child.pid, setup, log: logPath }
+  writeState(state)
+
+  try {
+    const ready = await readyProbe(runConfig.ready || {}, child)
+    const version = await versionValue(runConfig.version)
+    if (version) {
+      state.version = version
+      writeState(state)
+    }
+    console.log(`READY ${ready} ${run} target=${target}`)
+  } catch (error) {
+    console.error(logTail(logPath))
+    try {
+      process.kill(-child.pid, "SIGTERM")
+    } catch {
+      // already gone
+    }
+    finish("BLOCKED", "setup", error.message, run)
+  }
 }

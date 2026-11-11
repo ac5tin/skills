@@ -1,7 +1,18 @@
 import { existsSync } from "node:fs"
 import net from "node:net"
 import { join } from "node:path"
-import { REPO_ROOT, http, loadMap, readState, sh } from "./lib.mjs"
+import {
+  REPO_ROOT,
+  http,
+  loadMap,
+  parseArgs,
+  readState,
+  sh,
+  targetName,
+  targets,
+} from "./lib.mjs"
+
+const args = parseArgs()
 
 function checkPort(host, port) {
   return new Promise((resolvePromise) => {
@@ -45,9 +56,39 @@ async function runCheck(check) {
   return [proc.status === expect, `\`${check.cmd}\` -> ${proc.status}`]
 }
 
+async function readVersion(probe) {
+  if (!probe || !probe.url) return null
+  const expect = probe.expect ?? 200
+  try {
+    const { status, body } = await http(probe.method || "GET", probe.url)
+    let value = body.trim().slice(0, 200)
+    if (probe.field) {
+      try {
+        value = JSON.parse(body)[probe.field] ?? null
+      } catch {
+        value = null
+      }
+    }
+    return [status === expect, `${probe.url} -> ${status} version=${value} (expected ${expect})`]
+  } catch (error) {
+    return [false, `${probe.url}: ${error.message}`]
+  }
+}
+
 const data = loadMap()
-const checks = data.run?.health || []
 const state = readState()
+let target
+try {
+  target = targetName({ arg: args.target, run: args.runId || state.run_id, data })
+} catch (error) {
+  console.log(
+    JSON.stringify({ ok: false, target: args.target, checks: [{ check: "target", ok: false, detail: error.message }] }),
+  )
+  process.exit(2)
+}
+
+const config = targets(data)[target]
+const checks = config.health || config.run?.health || []
 const results = []
 let ok = true
 
@@ -57,7 +98,14 @@ for (const check of checks) {
   results.push({ check: check.kind || "cmd", ok: passed, detail })
 }
 
-if (checks.length === 0 && state.pid) {
+const version = await readVersion(config.version)
+if (version) {
+  const [passed, detail] = version
+  ok = ok && passed
+  results.push({ check: "version", ok: passed, detail })
+}
+
+if (checks.length === 0 && !version && state.pid) {
   let passed = false
   try {
     process.kill(state.pid, 0)
@@ -69,9 +117,9 @@ if (checks.length === 0 && state.pid) {
   results.push({ check: "pid", ok: passed, detail: `pid ${state.pid} ${passed ? "alive" : "gone"}` })
 }
 
-if (checks.length === 0 && !state.pid) {
+if (checks.length === 0 && !version && !state.pid) {
   results.push({ check: "none", ok: true, detail: "no health checks configured" })
 }
 
-console.log(JSON.stringify({ ok, checks: results }))
+console.log(JSON.stringify({ ok, target, checks: results }))
 process.exit(ok ? 0 : 2)

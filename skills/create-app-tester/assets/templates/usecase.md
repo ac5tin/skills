@@ -4,6 +4,8 @@
 
 **Priority:** {{PRIORITY}} - {{PRIORITY_REASON}}
 
+{{TARGETS_SECTION}}
+
 ## Features involved
 
 - [<feature name>](../features/<feature-file>.md)

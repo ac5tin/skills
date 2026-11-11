@@ -62,6 +62,29 @@ for (const name of ["lib", "doctor", "setup", "teardown", "validate"]) {
   }
 }
 
+let declared = data.targets
+if (!declared || Object.keys(declared).length === 0) {
+  console.log("WARN no targets block; run treated as local")
+  declared = { local: { kind: "local", run: data.run || {} } }
+}
+for (const [name, config] of Object.entries(declared)) {
+  if (!["local", "remote"].includes(config.kind)) {
+    fail(`target '${name}': kind must be local or remote, got '${config.kind}'`)
+  }
+  if (config.kind === "remote" && !config.base_url) {
+    fail(`target '${name}': remote target needs base_url`)
+  }
+  if (config.writes !== undefined && !["allowed", "read-only"].includes(config.writes)) {
+    fail(`target '${name}': writes must be allowed or read-only`)
+  }
+  if (config.auth !== undefined && !Array.isArray(config.auth)) {
+    fail(`target '${name}': auth must be a list of env var names`)
+  }
+}
+if (data.default_target && !(data.default_target in declared)) {
+  fail(`default_target '${data.default_target}' is not a declared target`)
+}
+
 const ids = [...features, ...usecases].map((entry) => entry.id)
 if (new Set(ids).size !== ids.length) fail("duplicate ids in map.json")
 
@@ -78,6 +101,19 @@ function checkEntries(entries, required, folder) {
     if (extension && entry.script && !entry.script.endsWith(extension)) {
       fail(`${id}: script must end with ${extension} for runtime ${runtime}`)
     }
+    const allowed = entry.targets
+    if (allowed !== undefined) {
+      if (!Array.isArray(allowed) || allowed.length === 0) {
+        fail(`${id}: targets must be a non-empty list`)
+      } else {
+        for (const targetName of allowed) {
+          if (!(targetName in declared)) fail(`${id}: unknown target '${targetName}'`)
+        }
+      }
+    }
+    if (entry.mutates !== undefined && typeof entry.mutates !== "boolean") {
+      fail(`${id}: mutates must be true or false`)
+    }
     if (!existsSync(filePath)) {
       fail(`${id}: missing file ${entry.file}`)
       continue
@@ -93,6 +129,15 @@ function checkEntries(entries, required, folder) {
     if (!priorityMatch) fail(`${id}: missing '**Priority:** Pn' line`)
     else if (priorityMatch[1] !== priority) {
       fail(`${id}: file priority ${priorityMatch[1]} != map ${priority}`)
+    }
+    if (
+      Array.isArray(allowed) &&
+      allowed.length &&
+      (allowed.length !== Object.keys(declared).length ||
+        allowed.some((targetName) => !(targetName in declared))) &&
+      !/^## Targets\s*$/m.test(body)
+    ) {
+      fail(`${id}: restricted targets need an '## Targets' section`)
     }
     seen.add(basename(filePath))
   }

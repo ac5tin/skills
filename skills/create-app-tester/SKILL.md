@@ -21,7 +21,7 @@ Read this file fully before Phase 0. Load a reference only when its phase starts
 - Ask with the harness question tool when present. Otherwise ask one numbered question and wait.
 - Non-interactive session with an existing tester and no flag: stop and print the three commands.
 - New name: first free `<app>-<n>-app-tester`, `n` from 1. Leave the original untouched.
-- Update: run the existing `references/playbooks/maintain.md`. Then, when `references/map.json.assets_digest` differs from this skill's asset digest, archive the generic files to `.app-tester/archive/<name>-assets-<timestamp>/` and overwrite only `SKILL.md`, `references/playbooks/*`, `lib.py`, `doctor.py`, `setup.py`, `teardown.py`, and `validate.py`. Never touch maps, `environment.md`, or `test-*.py`. Print every overwritten file.
+- Update: run the existing `references/playbooks/maintain.md`. Then, when `references/map.json.assets_digest` differs from this skill's asset digest, archive the generic files to `.app-tester/archive/<name>-assets-<timestamp>/` and overwrite only `SKILL.md`, `references/playbooks/*`, and `lib`, `doctor`, `setup`, `teardown`, `validate` with the runtime's extension. Never touch maps, `environment.md`, or `test-*.py`. Print every overwritten file.
 - Recreate: move the old tester to `.app-tester/archive/<name>-<timestamp>/`. Keep `.app-tester/artifacts/`. Never delete the old map.
 - Both modes: run `<runtime> <this-skill>/scripts/gitignore.<ext> <repo-root>` and report what changed.
 
@@ -45,7 +45,7 @@ Gate: the app must start and reach a usable state. A missing local asset may be 
 
 ## Phase 2 - Interview
 
-Ask the invoking agent only what the code cannot answer. One message, all questions, every question with a default. Use the bank in `references/discovery.md`. Record answers in `references/environment.md` as `Source: code | answered | assumed`.
+Ask the invoking agent only what the code cannot answer. One message, all questions, every question with a default. Use the bank in `references/discovery.md`. Record answers in `references/environment.md` as `Source: code | answered | assumed`. The target question is required: which targets exist, and which are read-only. Default `local` only.
 
 Gate: every answer is recorded or defaulted. Never ask again in a later phase.
 
@@ -62,7 +62,7 @@ Write `.agents/skills/<name>/`:
 1. Copy `assets/templates/SKILL.md`, `feature.md`, `usecase.md`, `features-README.md`, `usecases-README.md`, `playbook-test.md`, `playbook-maintain.md`, `environment.md`. Replace every `{{TOKEN}}`, including `{{RUNTIME}}` and `{{EXT}}`.
 2. Copy every file from `assets/runtimes/<runtime>/` into `scripts/`, except `test-feature.<ext>`.
 3. Write `scripts/test-<slug>.<ext>` per feature and `scripts/test-uc-<slug>.<ext>` per use case from `assets/runtimes/<runtime>/test-feature.<ext>`. Put real commands, selectors, and assertions in each.
-4. Write `references/map.json` with `runtime`, every id, file, script, run command, and `assets_digest`.
+4. Write `references/map.json` with `runtime`, `default_target`, `targets`, every id, file, script, entry `targets` and `mutates` when they apply, run command, and `assets_digest`. A restricted entry gets a `## Targets` section in its file.
 5. Run `<runtime> .agents/skills/<name>/scripts/validate.<ext>`. Fix every failure.
 6. Run `<runtime> <this-skill>/scripts/gitignore.<ext> <repo-root>`. It adds or refreshes a managed block: tester patterns plus stack patterns detected from manifests (`node_modules/` for `package.json`, `target/` for `Cargo.toml`, and so on). It preserves every other line. Report what it added.
 
@@ -70,14 +70,16 @@ No `{{` may remain. No placeholder prose.
 
 ## Phase 5 - Prove
 
-Run the generated skill once, end to end:
+Run the generated skill once, end to end, against the default target:
 
 1. `<runtime> .agents/skills/<name>/scripts/setup.<ext> --run-id proof`
 2. `<runtime> .agents/skills/<name>/scripts/doctor.<ext>`
 3. `<runtime> .agents/skills/<name>/scripts/test-<one-feature>.<ext> --run-id proof`
 4. `<runtime> .agents/skills/<name>/scripts/teardown.<ext> --run-id proof`
-5. Confirm the evidence still exists at its named path.
+5. Confirm the evidence still exists at its named path, and that it records the target.
 6. Run `validate.<ext>` again.
+
+For a `remote` target, prove the reachable part only: `setup --target <name>`, `doctor --target <name>`, one read-only entry, `teardown --target <name>`. Never write to it during the proof. Mark an untested write path as a limit, not a pass.
 
 Fix the generated skill until this passes. A generated tester that was never executed is a draft. If a real product bug blocks the run, report it and hand over a draft, clearly labeled.
 
@@ -86,7 +88,8 @@ Fix the generated skill until this passes. A generated tester that was never exe
 Print:
 
 - The skill name and both indexes.
-- Three examples: `/name all`, `/name test <id>`, `/name maintain`.
+- The targets it can drive, and which are read-only.
+- Three examples: `/name all`, `/name test <id>`, `/name all --target <name>`.
 - Known limits: blocked auth, missing browser harness, external services.
 - The update command: `/create-app-tester --update`.
 
@@ -96,7 +99,8 @@ Stop and report when: no write access; the app cannot start; no safe isolated en
 
 ## Never
 
-- Never point a test at production data or a shared database.
+- Never point a test at production data. Production targets are read-only; a write there is a bug in the tester.
+- Never start or kill a process for a `remote` target.
 - Never write a credential into the skill. Use env var names.
 - Never weaken an assertion to make a run pass.
 - Never edit product code to make a test pass. Report the bug.

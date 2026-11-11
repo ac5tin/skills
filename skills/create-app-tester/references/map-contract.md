@@ -38,6 +38,33 @@ Storage:
 
 Selection: `p0` (or `basic`) runs every `P0` entry. `p0-p1` runs a range. `all` ignores priority.
 
+### 1.2 Targets
+
+A target is one place the app runs. `map.json` holds one entry per target.
+
+| Field | Meaning |
+|---|---|
+| `kind` | `local` starts a process. `remote` is only probed. Required. |
+| `run` | `local` only: `setup`, `ready`, `teardown`, `health`. |
+| `base_url` | `remote` required. Optional on `local` when the app lives under a path; otherwise the ready URL's origin is used. |
+| `ready` | Probe after setup. `local` reads it from `run`. `remote` uses this. |
+| `health` | Checks for `doctor`. |
+| `version` | Optional probe. `{"url": "...", "field": "commit"}`. Its value goes into evidence. |
+| `writes` | `allowed` or `read-only`. `remote` defaults to `read-only`. |
+| `auth` | Env var names. Never values. |
+| `default_target` | Top-level. Must name one of the keys. |
+
+Resolution order: `--target`, `APP_TEST_TARGET`, the target recorded in `state.json` for the run id, `default_target`, `local`.
+
+An old map with no `targets` block is read as one `local` target built from the top-level `run`. It stays valid; `validate` prints a warning.
+
+Entry fields:
+
+- `targets`: list of target names. Absent means every target. An entry skipped on the active target reports `SKIP`, never `PASS`.
+- `mutates`: `true` when the entry writes data. A mutating entry on a `read-only` target exits `BLOCKED` unless the run passes `--allow-writes`.
+
+A restricted entry needs a `## Targets` H2 that names its targets and what differs: auth, seed data, or a step only one target has.
+
 ## 2. Feature file
 
 H1 plus one paragraph of user-visible behavior. Then exactly these H2s, in order:
@@ -83,7 +110,7 @@ A use case crosses two or more features and ends in a state a user can see.
 
 `validate.py` checks that every map file appears in its index.
 
-Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{RUNTIME}}`, `{{EXT}}`, `{{FEATURE_ID}}`, `{{FEATURE_NAME}}`, `{{FEATURE_FILE}}`, `{{UC_ID}}`, `{{UC_NAME}}`, `{{UC_FILE}}`, `{{SCRIPT}}`, `{{UC_SCRIPT}}`, `{{SUMMARY}}`, `{{PRIORITY}}`, `{{PRIORITY_REASON}}`. Every token must be replaced before `validate.py` runs. `{{SCRIPT}}` and `{{UC_SCRIPT}}` include the extension.
+Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{RUNTIME}}`, `{{EXT}}`, `{{FEATURE_ID}}`, `{{FEATURE_NAME}}`, `{{FEATURE_FILE}}`, `{{UC_ID}}`, `{{UC_NAME}}`, `{{UC_FILE}}`, `{{SCRIPT}}`, `{{UC_SCRIPT}}`, `{{SUMMARY}}`, `{{PRIORITY}}`, `{{PRIORITY_REASON}}`, `{{TARGETS_SECTION}}`. Every token must be replaced before `validate.py` runs. `{{SCRIPT}}` and `{{UC_SCRIPT}}` include the extension. `{{TARGETS_SECTION}}` is empty unless the entry is restricted to some targets.
 
 ## 5. `map.json`
 
@@ -97,15 +124,30 @@ Tokens: `{{APP}}`, `{{SKILL_NAME}}`, `{{SURFACE}}`, `{{DATE}}`, `{{RUNTIME}}`, `
   "assets_digest": "sha256",
   "stack": {"language": "python", "framework": "none", "package_manager": "pip"},
   "surfaces": [{"kind": "http", "entry_points": ["GET /notes"]}],
-  "run": {
-    "setup": "python3 app.py --port 8099",
-    "ready": {"url": "http://127.0.0.1:8099/health", "timeout": 30},
-    "teardown": "",
-    "health": [{"kind": "http", "url": "http://127.0.0.1:8099/health", "expect": 200}]
+  "default_target": "local",
+  "targets": {
+    "local": {
+      "kind": "local",
+      "writes": "allowed",
+      "run": {
+        "setup": "python3 app.py --port 8099",
+        "ready": {"url": "http://127.0.0.1:8099/health", "timeout": 30},
+        "teardown": "",
+        "health": [{"kind": "http", "url": "http://127.0.0.1:8099/health", "expect": 200}]
+      }
+    },
+    "dev": {
+      "kind": "remote",
+      "base_url": "https://dev.example.com",
+      "writes": "read-only",
+      "health": [{"kind": "http", "url": "https://dev.example.com/health", "expect": 200}],
+      "version": {"url": "https://dev.example.com/version", "field": "commit"},
+      "auth": ["APP_TEST_DEV_TOKEN"]
+    }
   },
   "evidence_root": ".app-tester/artifacts",
   "features": [
-    {"id": "feat-x", "priority": "P0", "file": "references/features/x.md", "script": "scripts/test-x.py"}
+    {"id": "feat-x", "priority": "P0", "file": "references/features/x.md", "script": "scripts/test-x.py", "mutates": true}
   ],
   "usecases": [
     {"id": "uc-y", "priority": "P0", "file": "references/usecases/y.md", "script": "scripts/test-uc-y.py", "features": ["feat-x"]}
@@ -119,9 +161,10 @@ Field rules:
 - `runtime`: `node` (Node 18+ and `.mjs`) or `python3` (`.py`). All scripts use that runtime and extension.
 - `source_commit`: `git rev-parse HEAD` at generation, or `null`.
 - `assets_digest`: output of `<runtime> <create-app-tester>/scripts/digest.<ext> <create-app-tester>/assets`.
-- `run.setup`: shell command, run from the repo root. It may start a server; the process group is recorded.
+- `run.setup`: shell command, run from the repo root. It may start a server; the process group is recorded. `local` only.
 - `run.ready`: URL to poll, or `{"cmd": "..."}`. Omit for a short-lived CLI.
-- `run.health`: list of checks for `doctor.py`: `http`, `cmd`, `port`, `file`.
+- `run.health`: list of checks for `doctor`: `http`, `cmd`, `port`, `file`.
+- `targets.<name>.base_url`: the only address a `remote` target drives.
 - `limits`: every blocked surface or missing driver, in plain words.
 
 ## 6. Scripts
@@ -130,25 +173,28 @@ All scripts run as `<runtime> <path>`: `node` for `.mjs`, `python3` for `.py`. N
 
 | Script | Arguments | Behavior |
 |---|---|---|
-| `doctor.<ext>` | none | Read-only. Runs `run.health`. Prints JSON. Exit 2 when unhealthy. |
-| `setup.<ext>` | `--run-id`, `--fresh` | Runs `run.setup`, waits for `run.ready`, records the process group in `.app-tester/state.json`. Prints `READY <url> <run-id>`. |
-| `teardown.<ext>` | `--run-id` | Stops the recorded process group and runs `run.teardown`. Keeps artifacts. Idempotent. |
-| `test-<slug>.<ext>` | `--run-id`, `--json` | One feature or use case. Prints `PASS|FAIL|BLOCKED <id> <reason>`. |
+| `doctor.<ext>` | `--target` | Read-only. Runs the active target's `health` and `version`. Prints JSON. Exit 2 when unhealthy. |
+| `setup.<ext>` | `--run-id`, `--target`, `--fresh` | `local`: runs `run.setup`, waits for `run.ready`, records the process group and target in `.app-tester/state.json`. `remote`: starts nothing, probes `ready`, records the target. Prints `READY <url> <run-id> target=<name>`. |
+| `teardown.<ext>` | `--run-id`, `--target` | Stops the recorded process group and runs `run.teardown` for a `local` target. Never starts, runs, or kills anything for a `remote` target. Keeps artifacts. Idempotent. |
+| `test-<slug>.<ext>` | `--run-id`, `--target`, `--allow-writes`, `--json` | One feature or use case. Prints `PASS|FAIL|BLOCKED|SKIP <id> <reason>`. |
 | `validate.<ext>` | none | Checks this contract. Prints each failure. |
-| `lib.<ext>` | none | Shared helpers: paths, HTTP, shell, assertions, evidence, state. |
+| `lib.<ext>` | none | Shared helpers: paths, HTTP, shell, assertions, evidence, state, targets. |
 
 Rules:
 
 - Idempotent and safe to re-run.
 - No secrets in arguments or output.
+- One target per run. A `remote` target is never started or killed.
 - Continue after one failure only at the playbook level; each script owns one entry.
 - A missing precondition raises `Blocked`, never a fake pass.
+- An entry not mapped to the active target raises `Skipped`.
 
 ## 7. Evidence
 
 - Root: `.app-tester/artifacts/<run-id>/<entry-id>/`.
 - Capture the action and the result: command, stdout, stderr, exit code; HTTP status and body; screenshot plus ARIA snapshot for UI.
 - Read-back through a second user-facing view for any mutation.
+- Every `result.json` records `target`, `base_url`, and the target's `version` when it declares one.
 - Evidence survives every teardown. Never clean the artifacts directory.
 - Record the entry id and entry point in every artifact name or header.
 

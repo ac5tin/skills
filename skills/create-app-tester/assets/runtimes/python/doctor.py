@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Read-only health check. Exit 2 when the instance is not worth driving."""
+import argparse
 import json
 import os
 import socket
@@ -35,10 +36,41 @@ def run_check(check):
     return proc.returncode == expect, f"`{check['cmd']}` -> {proc.returncode}"
 
 
+def read_version(probe):
+    if not probe or not probe.get("url"):
+        return None
+    expect = probe.get("expect", 200)
+    try:
+        status, body = lib.http(probe.get("method", "GET"), probe["url"])
+    except Exception as err:  # noqa: BLE001 - reported as a failed check
+        return False, f"{probe['url']}: {err}"
+    value = body.strip()[:200]
+    if probe.get("field"):
+        try:
+            value = json.loads(body).get(probe["field"])
+        except (ValueError, AttributeError):
+            value = None
+    return status == expect, f"{probe['url']} -> {status} version={value} (expected {expect})"
+
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--target", default=None)
+    parser.add_argument("--run-id", default=None)
+    args = parser.parse_args()
+
     data = lib.load_map()
-    checks = data.get("run", {}).get("health") or []
     state = lib.read_state()
+    try:
+        target = lib.target_name(args.target, args.run_id or state.get("run_id"), data)
+    except lib.Blocked as err:
+        print(json.dumps({"ok": False, "target": args.target, "checks": [
+            {"check": "target", "ok": False, "detail": str(err)}
+        ]}))
+        sys.exit(2)
+
+    cfg = lib.targets(data)[target]
+    checks = cfg.get("health") or (cfg.get("run") or {}).get("health") or []
     results = []
     ok = True
 
@@ -47,7 +79,13 @@ def main():
         ok = ok and passed
         results.append({"check": check.get("kind", "cmd"), "ok": passed, "detail": detail})
 
-    if not checks and state.get("pid"):
+    version = read_version(cfg.get("version"))
+    if version:
+        passed, detail = version
+        ok = ok and passed
+        results.append({"check": "version", "ok": passed, "detail": detail})
+
+    if not checks and not version and state.get("pid"):
         pid = state["pid"]
         try:
             os.kill(pid, 0)
@@ -57,10 +95,10 @@ def main():
         ok = passed
         results.append({"check": "pid", "ok": passed, "detail": detail})
 
-    if not checks and not state.get("pid"):
+    if not checks and not version and not state.get("pid"):
         results.append({"check": "none", "ok": True, "detail": "no health checks configured"})
 
-    print(json.dumps({"ok": ok, "checks": results}))
+    print(json.dumps({"ok": ok, "target": target, "checks": results}))
     sys.exit(0 if ok else 2)
 
 
